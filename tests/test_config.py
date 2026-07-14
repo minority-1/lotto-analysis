@@ -12,8 +12,12 @@ def test_settings_use_project_relative_defaults(tmp_path: Path) -> None:
     assert settings.data_dir == (tmp_path / "data").resolve()
     assert settings.raw_data_dir == (tmp_path / "data" / "raw").resolve()
     assert settings.processed_data_dir == (tmp_path / "data" / "processed").resolve()
+    assert settings.collection_history_dir == (
+        tmp_path / "data" / "collection_history"
+    ).resolve()
     assert settings.database_dir == (tmp_path / "database").resolve()
     assert settings.log_dir == (tmp_path / "logs").resolve()
+    assert settings.log_file == (tmp_path / "logs" / "lotto-analysis.log").resolve()
 
 
 def test_settings_honor_path_overrides(tmp_path: Path) -> None:
@@ -27,6 +31,10 @@ def test_settings_honor_path_overrides(tmp_path: Path) -> None:
             "LOTTO_REQUEST_MAX_RETRIES": "4",
             "LOTTO_REQUEST_RETRY_BACKOFF_SECONDS": "0.75",
             "LOTTO_USER_AGENT": "test-agent",
+            "LOTTO_COLLECTION_HISTORY_DIR": "history",
+            "LOTTO_LOG_FILE": "custom.log",
+            "LOTTO_LOG_MAX_BYTES": "1024",
+            "LOTTO_LOG_BACKUP_COUNT": "2",
         },
         project_root=tmp_path,
     )
@@ -40,6 +48,10 @@ def test_settings_honor_path_overrides(tmp_path: Path) -> None:
     assert settings.request_max_retries == 4
     assert settings.request_retry_backoff_seconds == 0.75
     assert settings.user_agent == "test-agent"
+    assert settings.collection_history_dir == (tmp_path / "history").resolve()
+    assert settings.log_file == (tmp_path / "custom.log").resolve()
+    assert settings.log_max_bytes == 1024
+    assert settings.log_backup_count == 2
 
 
 @pytest.mark.parametrize("timeout", ["invalid", "0", "-1"])
@@ -80,6 +92,28 @@ def test_settings_reject_invalid_retry_backoff(
         )
 
 
+@pytest.mark.parametrize("max_bytes", ["invalid", "0", "-1"])
+def test_settings_reject_invalid_log_max_bytes(
+    tmp_path: Path, max_bytes: str
+) -> None:
+    with pytest.raises(ValueError, match="LOTTO_LOG_MAX_BYTES"):
+        Settings.from_env(
+            environ={"LOTTO_LOG_MAX_BYTES": max_bytes},
+            project_root=tmp_path,
+        )
+
+
+@pytest.mark.parametrize("backup_count", ["invalid", "-1"])
+def test_settings_reject_invalid_log_backup_count(
+    tmp_path: Path, backup_count: str
+) -> None:
+    with pytest.raises(ValueError, match="LOTTO_LOG_BACKUP_COUNT"):
+        Settings.from_env(
+            environ={"LOTTO_LOG_BACKUP_COUNT": backup_count},
+            project_root=tmp_path,
+        )
+
+
 def test_ensure_directories_creates_runtime_paths(tmp_path: Path) -> None:
     settings = Settings.from_env(environ={}, project_root=tmp_path)
 
@@ -87,5 +121,6 @@ def test_ensure_directories_creates_runtime_paths(tmp_path: Path) -> None:
 
     assert settings.raw_data_dir.is_dir()
     assert settings.processed_data_dir.is_dir()
+    assert settings.collection_history_dir.is_dir()
     assert settings.database_dir.is_dir()
     assert settings.log_dir.is_dir()

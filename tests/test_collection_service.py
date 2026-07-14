@@ -135,3 +135,28 @@ def test_collect_missing_requests_only_gaps(tmp_path: Path) -> None:
 
     assert collector.calls == [2]
     assert summary.successful_draws == (2,)
+
+
+def test_collect_range_reports_progress_for_each_processed_draw(
+    tmp_path: Path,
+) -> None:
+    raw_store = RawJsonStore(tmp_path)
+    raw_store.save(1, {"ltEpsd": 1})
+    collector = StubCollector(failing_draws=[3])
+    progress = []
+    service = CollectionService(
+        collector,  # type: ignore[arg-type]
+        raw_store=raw_store,
+        request_interval_seconds=0,
+        progress=lambda processed, total, draw, status: progress.append(
+            (processed, total, draw, status)
+        ),
+    )
+
+    service.collect_range(1, 3)
+
+    assert progress == [
+        (1, 3, 1, "skipped"),
+        (2, 3, 2, "collected"),
+        (3, 3, 3, "failed"),
+    ]

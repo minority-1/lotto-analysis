@@ -14,6 +14,8 @@
 - 자동 재시도와 중단 후 이어받기
 - 증분 수집과 누락 회차 보완
 - 회차별 공식 원본 레코드 JSON 저장
+- 수집 실행 이력과 실패 회차 영구 기록
+- 수집 진행률 표시와 회전 파일 로그
 - 기본 logging 설정
 - pytest 구성
 
@@ -97,6 +99,18 @@ lotto-analysis collect-missing
 
 `collect-all`을 중단한 뒤 같은 명령을 다시 실행하면 저장된 유효 회차는 건너뛰고 나머지만 계속합니다.
 
+모든 수집 명령의 실행 결과는 기본적으로 `data/collection_history/`에 JSON 파일로 저장됩니다. 각 파일에는 명령, 실행 시간, 대상 범위, 성공·건너뜀·실패 회차와 실패 사유가 포함됩니다. 명령 실행이 끝나면 터미널에 생성된 이력 파일 경로가 표시됩니다.
+
+범위 수집 중에는 처리 건수, 전체 건수, 백분율, 현재 회차와 상태가 표시됩니다. 긴 전체 수집에서는 약 1% 단위로 출력하며 실패는 즉시 출력합니다.
+
+콘솔 로그는 기본적으로 `logs/lotto-analysis.log`에도 저장됩니다. 로그 파일이 5 MiB를 넘으면 최대 3개의 백업 파일로 회전합니다.
+
+최근 실행 이력을 확인하는 예시는 다음과 같습니다.
+
+```bash
+ls -lt data/collection_history | head
+```
+
 공식 결과 화면 내부에서 사용하는 JSON 엔드포인트는 공개 API 문서가 확인되지 않았으므로 사이트 응답 구조가 변경되면 수집기도 함께 갱신해야 합니다.
 
 ## 환경변수
@@ -108,9 +122,13 @@ lotto-analysis collect-missing
 | `LOTTO_DATA_DIR` | `data` |
 | `LOTTO_RAW_DATA_DIR` | `data/raw` |
 | `LOTTO_PROCESSED_DATA_DIR` | `data/processed` |
+| `LOTTO_COLLECTION_HISTORY_DIR` | `data/collection_history` |
 | `LOTTO_DATABASE_DIR` | `database` |
 | `LOTTO_LOG_DIR` | `logs` |
+| `LOTTO_LOG_FILE` | `logs/lotto-analysis.log` |
 | `LOTTO_LOG_LEVEL` | `INFO` |
+| `LOTTO_LOG_MAX_BYTES` | `5242880` |
+| `LOTTO_LOG_BACKUP_COUNT` | `3` |
 | `LOTTO_SOURCE_BASE_URL` | `https://www.dhlottery.co.kr` |
 | `LOTTO_REQUEST_TIMEOUT_SECONDS` | `10` |
 | `LOTTO_REQUEST_INTERVAL_SECONDS` | `0.5` |

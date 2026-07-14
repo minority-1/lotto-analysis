@@ -2,7 +2,7 @@
 
 import logging
 import time
-from typing import Callable, Iterable, List
+from typing import Callable, Iterable, List, Optional
 
 from lotto_analysis.collectors import CollectorError, DhlotteryDrawCollector
 from lotto_analysis.models import CollectionFailure, CollectionSummary
@@ -21,6 +21,7 @@ class CollectionService:
         raw_store: RawJsonStore,
         request_interval_seconds: float = 0.5,
         sleep: Callable[[float], None] = time.sleep,
+        progress: Optional[Callable[[int, int, int, str], None]] = None,
     ) -> None:
         if request_interval_seconds < 0:
             raise ValueError("request_interval_seconds cannot be negative")
@@ -28,6 +29,7 @@ class CollectionService:
         self._raw_store = raw_store
         self._request_interval_seconds = request_interval_seconds
         self._sleep = sleep
+        self._progress = progress
 
     def collect_all(self, resume: bool = True) -> CollectionSummary:
         """Collect draw 1 through latest, skipping valid files by default."""
@@ -82,15 +84,18 @@ class CollectionService:
         end_draw: int,
         resume: bool,
     ) -> CollectionSummary:
+        requested_draws = tuple(draw_numbers)
+        total_draws = len(requested_draws)
         successful_draws: List[int] = []
         skipped_draws: List[int] = []
         failures: List[CollectionFailure] = []
         made_request = False
 
-        for draw_number in draw_numbers:
+        for processed, draw_number in enumerate(requested_draws, start=1):
             if resume and self._raw_store.has_valid_draw(draw_number):
                 skipped_draws.append(draw_number)
                 LOGGER.info("Skipping stored draw %s", draw_number)
+                self._report_progress(processed, total_draws, draw_number, "skipped")
                 continue
 
             if made_request and self._request_interval_seconds:
@@ -101,11 +106,13 @@ class CollectionService:
                 self._collector.collect_draw(draw_number)
                 successful_draws.append(draw_number)
                 LOGGER.info("Collected draw %s", draw_number)
+                self._report_progress(processed, total_draws, draw_number, "collected")
             except (CollectorError, RawDataConflictError, OSError) as exc:
                 LOGGER.error("Failed to collect draw %s: %s", draw_number, exc)
                 failures.append(
                     CollectionFailure(draw_number=draw_number, reason=str(exc))
                 )
+                self._report_progress(processed, total_draws, draw_number, "failed")
 
         return CollectionSummary(
             start_draw=start_draw,
@@ -114,6 +121,12 @@ class CollectionService:
             skipped_draws=tuple(skipped_draws),
             failures=tuple(failures),
         )
+
+    def _report_progress(
+        self, processed: int, total: int, draw_number: int, status: str
+    ) -> None:
+        if self._progress is not None:
+            self._progress(processed, total, draw_number, status)
 
     @staticmethod
     def _empty_summary(start_draw: int, end_draw: int) -> CollectionSummary:

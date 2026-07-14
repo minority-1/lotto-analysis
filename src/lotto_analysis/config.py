@@ -22,9 +22,13 @@ class Settings:
     data_dir: Path
     raw_data_dir: Path
     processed_data_dir: Path
+    collection_history_dir: Path
     database_dir: Path
     log_dir: Path
+    log_file: Path
     log_level: str = "INFO"
+    log_max_bytes: int = 5 * 1024 * 1024
+    log_backup_count: int = 3
     source_base_url: str = "https://www.dhlottery.co.kr"
     request_timeout_seconds: float = 10.0
     request_interval_seconds: float = 0.5
@@ -81,6 +85,22 @@ class Settings:
             raise ValueError(
                 "LOTTO_REQUEST_RETRY_BACKOFF_SECONDS cannot be negative"
             )
+        try:
+            log_max_bytes = int(
+                env.get("LOTTO_LOG_MAX_BYTES", str(5 * 1024 * 1024))
+            )
+        except ValueError as exc:
+            raise ValueError("LOTTO_LOG_MAX_BYTES must be an integer") from exc
+        if log_max_bytes <= 0:
+            raise ValueError("LOTTO_LOG_MAX_BYTES must be positive")
+        try:
+            log_backup_count = int(env.get("LOTTO_LOG_BACKUP_COUNT", "3"))
+        except ValueError as exc:
+            raise ValueError("LOTTO_LOG_BACKUP_COUNT must be an integer") from exc
+        if log_backup_count < 0:
+            raise ValueError("LOTTO_LOG_BACKUP_COUNT cannot be negative")
+
+        log_dir = _resolve_path(env.get("LOTTO_LOG_DIR", "logs"), root)
 
         return cls(
             project_root=root,
@@ -92,11 +112,24 @@ class Settings:
                 env.get("LOTTO_PROCESSED_DATA_DIR", str(data_dir / "processed")),
                 root,
             ),
+            collection_history_dir=_resolve_path(
+                env.get(
+                    "LOTTO_COLLECTION_HISTORY_DIR",
+                    str(data_dir / "collection_history"),
+                ),
+                root,
+            ),
             database_dir=_resolve_path(
                 env.get("LOTTO_DATABASE_DIR", "database"), root
             ),
-            log_dir=_resolve_path(env.get("LOTTO_LOG_DIR", "logs"), root),
+            log_dir=log_dir,
+            log_file=_resolve_path(
+                env.get("LOTTO_LOG_FILE", str(log_dir / "lotto-analysis.log")),
+                root,
+            ),
             log_level=env.get("LOTTO_LOG_LEVEL", "INFO").upper(),
+            log_max_bytes=log_max_bytes,
+            log_backup_count=log_backup_count,
             source_base_url=env.get(
                 "LOTTO_SOURCE_BASE_URL", "https://www.dhlottery.co.kr"
             ).rstrip("/"),
@@ -113,6 +146,7 @@ class Settings:
             self.data_dir,
             self.raw_data_dir,
             self.processed_data_dir,
+            self.collection_history_dir,
             self.database_dir,
             self.log_dir,
         ):
