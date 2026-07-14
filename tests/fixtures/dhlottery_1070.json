@@ -1,0 +1,36 @@
+{
+  "resultCode": null,
+  "resultMessage": null,
+  "data": {
+    "list": [
+      {
+        "ltEpsd": 1071,
+        "tm1WnNo": 1,
+        "tm2WnNo": 2,
+        "tm3WnNo": 11,
+        "tm4WnNo": 21,
+        "tm5WnNo": 30,
+        "tm6WnNo": 35,
+        "bnsWnNo": 39,
+        "ltRflYmd": "20230610",
+        "rnk1WnNope": 5,
+        "rnk1WnAmt": 5183979750,
+        "wholEpsdSumNtslAmt": 107362630000
+      },
+      {
+        "ltEpsd": 1070,
+        "tm1WnNo": 3,
+        "tm2WnNo": 6,
+        "tm3WnNo": 14,
+        "tm4WnNo": 22,
+        "tm5WnNo": 30,
+        "tm6WnNo": 41,
+        "bnsWnNo": 36,
+        "ltRflYmd": "20230603",
+        "rnk1WnNope": 14,
+        "rnk1WnAmt": 1859116929,
+        "wholEpsdSumNtslAmt": 107222802000
+      }
+    ]
+  }
+}

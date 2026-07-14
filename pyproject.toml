@@ -8,6 +8,13 @@ version = "0.1.0"
 description = "Korean Lotto 6/45 data collection and analysis project"
 readme = "README.md"
 requires-python = ">=3.9"
+dependencies = [
+    "requests>=2.28,<3",
+    "urllib3>=1.26.18,<2",
+]
+
+[project.scripts]
+lotto-analysis = "lotto_analysis.cli:main"
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0"]
@@ -19,4 +26,6 @@ where = ["src"]
 addopts = "-ra"
 pythonpath = ["src"]
 testpaths = ["tests"]
-
+markers = [
+    "external: tests that call an external service and are skipped by default",
+]

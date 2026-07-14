@@ -25,6 +25,12 @@ class Settings:
     database_dir: Path
     log_dir: Path
     log_level: str = "INFO"
+    source_base_url: str = "https://www.dhlottery.co.kr"
+    request_timeout_seconds: float = 10.0
+    request_interval_seconds: float = 0.5
+    request_max_retries: int = 3
+    request_retry_backoff_seconds: float = 0.5
+    user_agent: str = "lotto-analysis/0.1"
 
     @classmethod
     def from_env(
@@ -41,6 +47,41 @@ class Settings:
         )
         data_dir = _resolve_path(env.get("LOTTO_DATA_DIR", "data"), root)
 
+        try:
+            request_timeout_seconds = float(
+                env.get("LOTTO_REQUEST_TIMEOUT_SECONDS", "10")
+            )
+        except ValueError as exc:
+            raise ValueError("LOTTO_REQUEST_TIMEOUT_SECONDS must be a number") from exc
+        if request_timeout_seconds <= 0:
+            raise ValueError("LOTTO_REQUEST_TIMEOUT_SECONDS must be positive")
+        try:
+            request_interval_seconds = float(
+                env.get("LOTTO_REQUEST_INTERVAL_SECONDS", "0.5")
+            )
+        except ValueError as exc:
+            raise ValueError("LOTTO_REQUEST_INTERVAL_SECONDS must be a number") from exc
+        if request_interval_seconds < 0:
+            raise ValueError("LOTTO_REQUEST_INTERVAL_SECONDS cannot be negative")
+        try:
+            request_max_retries = int(env.get("LOTTO_REQUEST_MAX_RETRIES", "3"))
+        except ValueError as exc:
+            raise ValueError("LOTTO_REQUEST_MAX_RETRIES must be an integer") from exc
+        if request_max_retries < 0:
+            raise ValueError("LOTTO_REQUEST_MAX_RETRIES cannot be negative")
+        try:
+            request_retry_backoff_seconds = float(
+                env.get("LOTTO_REQUEST_RETRY_BACKOFF_SECONDS", "0.5")
+            )
+        except ValueError as exc:
+            raise ValueError(
+                "LOTTO_REQUEST_RETRY_BACKOFF_SECONDS must be a number"
+            ) from exc
+        if request_retry_backoff_seconds < 0:
+            raise ValueError(
+                "LOTTO_REQUEST_RETRY_BACKOFF_SECONDS cannot be negative"
+            )
+
         return cls(
             project_root=root,
             data_dir=data_dir,
@@ -56,6 +97,14 @@ class Settings:
             ),
             log_dir=_resolve_path(env.get("LOTTO_LOG_DIR", "logs"), root),
             log_level=env.get("LOTTO_LOG_LEVEL", "INFO").upper(),
+            source_base_url=env.get(
+                "LOTTO_SOURCE_BASE_URL", "https://www.dhlottery.co.kr"
+            ).rstrip("/"),
+            request_timeout_seconds=request_timeout_seconds,
+            request_interval_seconds=request_interval_seconds,
+            request_max_retries=request_max_retries,
+            request_retry_backoff_seconds=request_retry_backoff_seconds,
+            user_agent=env.get("LOTTO_USER_AGENT", "lotto-analysis/0.1"),
         )
 
     def ensure_directories(self) -> None:
@@ -68,4 +117,3 @@ class Settings:
             self.log_dir,
         ):
             directory.mkdir(parents=True, exist_ok=True)
-
