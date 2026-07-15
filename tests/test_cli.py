@@ -58,3 +58,7 @@ def test_main_reports_settings_failure_without_traceback(
 
     assert cli.main(["collect-one", "1"]) == 1
     assert "Collection failed: invalid setting" in capsys.readouterr().out  # type: ignore[attr-defined]
+
+
+def test_parser_accepts_process_command() -> None:
+    assert cli.build_parser().parse_args(["process"]).command == "process"

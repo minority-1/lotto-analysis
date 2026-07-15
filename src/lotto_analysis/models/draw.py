@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import Tuple
+from typing import Optional, Tuple
 
 
 @dataclass(frozen=True)
@@ -16,7 +16,7 @@ class LottoDraw:
     first_prize_winners: int
     first_prize_amount: int
     total_sales_amount: int
-    collected_at: datetime
+    collected_at: Optional[datetime]
 
     def __post_init__(self) -> None:
         """Validate invariants that every normalized draw must satisfy."""
@@ -49,6 +49,8 @@ class LottoDraw:
             raise ValueError("winner counts and amounts must be integers")
         if any(value < 0 for value in non_negative_values):
             raise ValueError("winner counts and amounts must be non-negative integers")
+        if self.collected_at is None:
+            return
         if not isinstance(self.collected_at, datetime):
             raise ValueError("collected_at must be a datetime")
         if self.collected_at.tzinfo is None or self.collected_at.utcoffset() is None:

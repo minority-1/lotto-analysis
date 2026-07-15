@@ -27,6 +27,10 @@ def test_lotto_draw_accepts_valid_data() -> None:
     assert draw.numbers == (10, 23, 29, 33, 37, 40)
 
 
+def test_lotto_draw_accepts_unknown_collection_time() -> None:
+    assert make_draw(collected_at=None).collected_at is None
+
+
 @pytest.mark.parametrize(
     ("overrides", "message"),
     [

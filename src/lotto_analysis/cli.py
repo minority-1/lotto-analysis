@@ -8,7 +8,7 @@ from lotto_analysis.collectors import CollectorError, DhlotteryDrawCollector
 from lotto_analysis.config import Settings
 from lotto_analysis.logging_config import configure_logging
 from lotto_analysis.models import CollectionSummary
-from lotto_analysis.services import CollectionService
+from lotto_analysis.services import CollectionService, ProcessingService
 from lotto_analysis.storage import CollectionHistoryStore, RawJsonStore
 
 
@@ -41,6 +41,9 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser(
         "collect-missing", help="collect missing draws through latest"
     )
+    subparsers.add_parser(
+        "process", help="validate raw draws and create processed CSV"
+    )
     return parser
 
 
@@ -59,6 +62,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             max_bytes=settings.log_max_bytes,
             backup_count=settings.log_backup_count,
         )
+        if args.command == "process":
+            return _run_processing(settings)
         raw_store = RawJsonStore(settings.raw_data_dir)
         collector = DhlotteryDrawCollector(
             settings=settings,
@@ -101,6 +106,25 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print("- draw {0}: {1}".format(failure.draw_number, failure.reason))
     print("History: {0}".format(history_path))
     return 1 if summary.failures else 0
+
+
+def _run_processing(settings: Settings) -> int:
+    """Execute raw validation and report the generated artifacts."""
+    summary = ProcessingService(
+        raw_dir=settings.raw_data_dir,
+        processed_dir=settings.processed_data_dir,
+    ).process()
+    print(
+        "Processed {0} files; {1} valid; {2} errors; {3} missing".format(
+            summary.total_files,
+            summary.valid_count,
+            summary.error_count,
+            len(summary.missing_draws),
+        )
+    )
+    print("CSV: {0}".format(summary.csv_path))
+    print("Report: {0}".format(summary.report_path))
+    return 1 if summary.issues or summary.missing_draws else 0
 
 
 def _save_failure_history(
