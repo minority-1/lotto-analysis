@@ -76,6 +76,28 @@ def test_collect_draw_stores_only_requested_official_record(tmp_path: Path) -> N
     assert "data" not in stored
 
 
+def test_collect_draw_does_not_store_record_that_fails_normalization(
+    tmp_path: Path,
+) -> None:
+    raw_store = RawJsonStore(tmp_path)
+    response = Mock()
+    response.json.return_value = {"data": {"list": [{"ltEpsd": 1070}]}}
+    response.raise_for_status.return_value = None
+    session = Mock()
+    session.get.return_value = response
+    collector = DhlotteryDrawCollector(
+        session=session,
+        raw_store=raw_store,
+        now=lambda: COLLECTED_AT,
+    )
+
+    with pytest.raises(ResponseFormatError):
+        collector.collect_draw(1070)
+
+    assert not raw_store.path_for(1070).exists()
+    assert not raw_store.has_valid_draw(1070)
+
+
 def test_collect_draw_rejects_invalid_draw_number_before_request() -> None:
     collector, session = make_collector(load_payload())
 
@@ -220,4 +242,17 @@ def test_collect_draw_rejects_malformed_payload(payload: Dict[str, Any]) -> None
     collector, _ = make_collector(payload)
 
     with pytest.raises(ResponseFormatError):
+        collector.collect_draw(1070)
+
+
+@pytest.mark.parametrize("invalid_value", [1.5, "1.5", "", None, True])
+def test_collect_draw_rejects_non_integer_numeric_field(invalid_value: Any) -> None:
+    payload = load_payload()
+    requested = next(
+        item for item in payload["data"]["list"] if item["ltEpsd"] == 1070
+    )
+    requested["rnk1WnNope"] = invalid_value
+    collector, _ = make_collector(payload)
+
+    with pytest.raises(ResponseFormatError, match="rnk1WnNope"):
         collector.collect_draw(1070)

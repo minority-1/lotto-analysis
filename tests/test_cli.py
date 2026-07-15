@@ -1,4 +1,9 @@
+import json
+from pathlib import Path
+
+from lotto_analysis import cli
 from lotto_analysis.cli import _print_progress
+from lotto_analysis.config import Settings
 
 
 def test_print_progress_reports_periodic_and_final_updates(capsys: object) -> None:
@@ -19,3 +24,37 @@ def test_print_progress_always_reports_failure(capsys: object) -> None:
 
     output = capsys.readouterr().out  # type: ignore[attr-defined]
     assert "draw 7: failed" in output
+
+
+def test_main_records_logging_initialization_failure(
+    tmp_path: Path, monkeypatch: object, capsys: object
+) -> None:
+    settings = Settings.from_env(project_root=tmp_path, environ={})
+    monkeypatch.setattr(cli.Settings, "from_env", lambda: settings)  # type: ignore[attr-defined]
+
+    def fail_logging(*args: object, **kwargs: object) -> None:
+        raise OSError("log directory unavailable")
+
+    monkeypatch.setattr(cli, "configure_logging", fail_logging)  # type: ignore[attr-defined]
+
+    exit_code = cli.main(["collect-one", "1"])
+
+    assert exit_code == 1
+    assert "Collection failed: log directory unavailable" in capsys.readouterr().out  # type: ignore[attr-defined]
+    history_paths = list(settings.collection_history_dir.glob("*.json"))
+    assert len(history_paths) == 1
+    history = json.loads(history_paths[0].read_text(encoding="utf-8"))
+    assert history["status"] == "failed"
+    assert history["error"] == "log directory unavailable"
+
+
+def test_main_reports_settings_failure_without_traceback(
+    monkeypatch: object, capsys: object
+) -> None:
+    def fail_settings() -> Settings:
+        raise ValueError("invalid setting")
+
+    monkeypatch.setattr(cli.Settings, "from_env", fail_settings)  # type: ignore[attr-defined]
+
+    assert cli.main(["collect-one", "1"]) == 1
+    assert "Collection failed: invalid setting" in capsys.readouterr().out  # type: ignore[attr-defined]

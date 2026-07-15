@@ -3,6 +3,7 @@
 from datetime import datetime, timezone
 from html.parser import HTMLParser
 import logging
+import re
 import time
 from typing import Any, Callable, Mapping, Optional
 
@@ -61,9 +62,10 @@ class DhlotteryDrawCollector(DrawCollector):
         LOGGER.info("Collecting Lotto draw %s from the official source", draw_number)
         payload = self._request(draw_number)
         item = self._find_draw(payload, draw_number)
+        draw = self._to_model(item)
         if self._raw_store is not None:
             self._raw_store.save(draw_number, item)
-        return self._to_model(item)
+        return draw
 
     def get_latest_draw_number(self) -> int:
         """Return the latest completed draw number shown by the official page."""
@@ -196,12 +198,13 @@ class DhlotteryDrawCollector(DrawCollector):
 def _required_int(item: Mapping[str, Any], field: str) -> int:
     """Return one required integer field without accepting booleans."""
     value = item.get(field)
-    if isinstance(value, bool):
-        raise ResponseFormatError("Field {0} must be an integer".format(field))
-    try:
-        return int(value)
-    except (TypeError, ValueError) as exc:
-        raise ResponseFormatError("Field {0} must be an integer".format(field)) from exc
+    if type(value) is int:
+        return value
+    if isinstance(value, str):
+        normalized = value.strip()
+        if re.fullmatch(r"[+-]?[0-9]+", normalized):
+            return int(normalized)
+    raise ResponseFormatError("Field {0} must be an integer".format(field))
 
 
 def _required_text(item: Mapping[str, Any], field: str) -> str:

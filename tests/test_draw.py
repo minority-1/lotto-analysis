@@ -42,3 +42,31 @@ def test_lotto_draw_rejects_invalid_data(overrides: object, message: str) -> Non
     with pytest.raises(ValueError, match=message):
         make_draw(**overrides)  # type: ignore[arg-type]
 
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"draw_number": 1.5},
+        {"numbers": (1, 2, 3, 4, 5, 6.5)},
+        {"bonus_number": 7.5},
+        {"first_prize_winners": 1.5},
+        {"first_prize_amount": 1.5},
+        {"total_sales_amount": 1.5},
+    ],
+)
+def test_lotto_draw_rejects_non_integer_numeric_fields(overrides: object) -> None:
+    with pytest.raises(ValueError, match="integer"):
+        make_draw(**overrides)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"draw_date": "2002-12-07"},
+        {"collected_at": "2026-07-14T00:00:00+00:00"},
+        {"collected_at": datetime(2026, 7, 14)},
+    ],
+)
+def test_lotto_draw_rejects_invalid_date_or_timestamp(overrides: object) -> None:
+    with pytest.raises(ValueError):
+        make_draw(**overrides)  # type: ignore[arg-type]

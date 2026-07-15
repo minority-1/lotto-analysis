@@ -47,47 +47,46 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     """Execute one collection command and return a process exit code."""
     args = build_parser().parse_args(argv)
-    settings = Settings.from_env()
-    configure_logging(
-        settings.log_level,
-        log_file=settings.log_file,
-        max_bytes=settings.log_max_bytes,
-        backup_count=settings.log_backup_count,
-    )
-    raw_store = RawJsonStore(settings.raw_data_dir)
-    history_store = CollectionHistoryStore(settings.collection_history_dir)
-    collector = DhlotteryDrawCollector(
-        settings=settings,
-        raw_store=raw_store,
-    )
-
-    service = CollectionService(
-        collector,
-        raw_store=raw_store,
-        request_interval_seconds=settings.request_interval_seconds,
-        progress=_print_progress,
-    )
     command = _describe_command(args)
     started_at = datetime.now(timezone.utc)
+    history_store: Optional[CollectionHistoryStore] = None
     try:
+        settings = Settings.from_env()
+        history_store = CollectionHistoryStore(settings.collection_history_dir)
+        configure_logging(
+            settings.log_level,
+            log_file=settings.log_file,
+            max_bytes=settings.log_max_bytes,
+            backup_count=settings.log_backup_count,
+        )
+        raw_store = RawJsonStore(settings.raw_data_dir)
+        collector = DhlotteryDrawCollector(
+            settings=settings,
+            raw_store=raw_store,
+        )
+        service = CollectionService(
+            collector,
+            raw_store=raw_store,
+            request_interval_seconds=settings.request_interval_seconds,
+            progress=_print_progress,
+        )
         summary = _execute_command(args, service)
-    except (CollectorError, OSError) as exc:
+    except (CollectorError, OSError, ValueError) as exc:
+        print("Collection failed: {0}".format(exc))
+        _save_failure_history(history_store, command, started_at, exc)
+        return 1
+
+    assert history_store is not None
+    try:
         history_path = history_store.save(
             command=command,
             started_at=started_at,
             completed_at=datetime.now(timezone.utc),
-            error=str(exc),
+            summary=summary,
         )
-        print("Collection failed: {0}".format(exc))
-        print("History: {0}".format(history_path))
+    except (OSError, ValueError) as exc:
+        print("Collection completed, but history could not be saved: {0}".format(exc))
         return 1
-
-    history_path = history_store.save(
-        command=command,
-        started_at=started_at,
-        completed_at=datetime.now(timezone.utc),
-        summary=summary,
-    )
 
     print(
         "Collected {0} draws; {1} skipped; {2} failed ({3}-{4})".format(
@@ -102,6 +101,29 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print("- draw {0}: {1}".format(failure.draw_number, failure.reason))
     print("History: {0}".format(history_path))
     return 1 if summary.failures else 0
+
+
+def _save_failure_history(
+    history_store: Optional[CollectionHistoryStore],
+    command: str,
+    started_at: datetime,
+    error: Exception,
+) -> None:
+    """Save a failure when possible without hiding the original error."""
+    if history_store is None:
+        print("History unavailable: settings could not be loaded")
+        return
+    try:
+        history_path = history_store.save(
+            command=command,
+            started_at=started_at,
+            completed_at=datetime.now(timezone.utc),
+            error=str(error),
+        )
+    except (OSError, ValueError) as history_error:
+        print("History unavailable: {0}".format(history_error))
+        return
+    print("History: {0}".format(history_path))
 
 
 def _execute_command(
