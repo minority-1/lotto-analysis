@@ -2,12 +2,18 @@ from datetime import date
 
 import pytest
 
-from lotto_analysis.analysis import analyze_gaps, analyze_matrix, compare_periods
+from lotto_analysis.analysis import (
+    analyze_gaps,
+    analyze_matrix,
+    compare_matrices,
+    compare_periods,
+)
 from lotto_analysis.models import CombinationFrequency, LottoDraw
 from lotto_analysis.ui.generation import parse_number_text, parse_optional_seed
 from lotto_analysis.ui.pattern_analysis import matrix_count_rows
 from lotto_analysis.ui.period_and_gaps import comparison_rows, gap_rows
 from lotto_analysis.ui.relationship_analysis import combination_rows
+from lotto_analysis.ui.similarity_and_matrix import matrix_difference_rows
 
 
 def test_matrix_count_rows_formats_valid_and_empty_cells() -> None:
@@ -78,3 +84,14 @@ def analyze_draws_for_view(draw_number: int, numbers: tuple) -> LottoDraw:
         total_sales_amount=1000,
         collected_at=None,
     )
+
+
+def test_matrix_difference_rows_formats_signed_rates_and_empty_cells() -> None:
+    baseline = analyze_draws_for_view(1, (1, 2, 3, 4, 5, 6))
+    recent = analyze_draws_for_view(2, (1, 7, 8, 9, 10, 11))
+
+    rows = matrix_difference_rows(compare_matrices((baseline,), (recent,)))
+
+    assert rows[0]["열 1"] == "1 (+0.0%)"
+    assert rows[0]["열 2"] == "2 (-100.0%)"
+    assert rows[6]["열 4"] == "-"
