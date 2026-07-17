@@ -3,6 +3,8 @@ from datetime import date
 from lotto_analysis.analysis import analyze_matrix
 from lotto_analysis.models import LottoDraw
 from lotto_analysis.ui.pattern_analysis import matrix_count_rows
+from lotto_analysis.ui.relationship_analysis import combination_rows
+from lotto_analysis.models import CombinationFrequency
 
 
 def test_matrix_count_rows_formats_valid_and_empty_cells() -> None:
@@ -23,3 +25,11 @@ def test_matrix_count_rows_formats_valid_and_empty_cells() -> None:
     assert rows[0]["열 1"] == "1 (1)"
     assert rows[6]["열 3"] == "45 (1)"
     assert rows[6]["열 4"] == "-"
+
+
+def test_combination_rows_formats_pair_frequency() -> None:
+    rows = combination_rows(
+        (CombinationFrequency(numbers=(1, 2), count=3, draw_rate=0.25),)
+    )
+
+    assert rows == [{"번호": "1, 2", "출현": 3, "회차당 비율": 0.25}]
