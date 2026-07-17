@@ -100,3 +100,12 @@
 * 출현 간격은 실제 회차 번호 차이를 사용하고 평균·중앙·최소·최대·최근 간격과 모집단 표준편차를 계산한다.
 * 쉽게 재계산 가능한 분석 결과는 데이터베이스에 저장하지 않으며 사용자가 `--export`를 지정할 때만 `data/analysis/`에 JSON으로 저장한다.
 * 번호쌍·3개 조합·행렬·조건 생성·백테스트는 PostgreSQL 도입 이후 단계로 둔다.
+
+## 2026-07-17: Docker 기반 PostgreSQL 개발 환경
+
+* 로컬 PostgreSQL은 Docker Desktop과 Docker Compose로 실행한다.
+* PostgreSQL 17 공식 Alpine 이미지를 사용하고 최신 17.x 수정 버전은 이미지 갱신 시 반영한다.
+* DB 포트는 외부 네트워크에 공개하지 않고 `127.0.0.1`에만 연결한다.
+* DB 파일은 Compose 명명 볼륨에 보존하여 컨테이너를 다시 만들어도 유지한다.
+* DB 이름, 사용자, 비밀번호와 호스트 포트는 `.env`에서 읽고 실제 `.env`는 Git에 포함하지 않는다.
+* Compose 설정과 컨테이너 검증을 먼저 마친 뒤 SQLAlchemy, psycopg, Alembic과 Repository를 별도 작업으로 도입한다.

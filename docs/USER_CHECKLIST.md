@@ -170,6 +170,22 @@ lotto-analysis gaps --export
 
 새 회차가 추가되면 위 회차 범위는 달라진다. 이 확인을 마치면 PostgreSQL 설치·Repository 구현 단계로 진행할 수 있다.
 
+## PostgreSQL 개발 환경 확인
+
+```bash
+docker compose up -d postgres
+docker compose ps
+docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "select current_database(), current_user;"'
+```
+
+확인 항목:
+
+* `[완료]` Docker Desktop 설치 및 엔진 실행 확인
+* `[완료]` 로컬 `.env` 생성과 Git 제외 확인
+* `[완료]` `docker compose ps`에서 PostgreSQL 상태가 `healthy`인지 확인
+* `[완료]` 접속 결과가 `lotto_analysis / lotto_app / PostgreSQL 17.10`인지 확인
+* `[완료]` 컨테이너 제거·재생성 후에도 명명 볼륨의 확인 데이터가 유지되는지 확인
+
 이 단계의 구체적인 생성·수정 파일은 구현 전에 별도로 설명한다.
 
 ## 변경 이력
@@ -183,3 +199,4 @@ lotto-analysis gaps --export
 * 2026-07-15: SQLite 제외 결정과 원본 검증·정제 CSV 생성 기능 구현.
 * 2026-07-17: CSV Repository와 1차 기본 통계 분석 및 사용자 확인 명령 추가.
 * 2026-07-17: 분석 요약 JSON, 기간 비교와 출현 간격 분석 및 DB 전 확인 명령 추가.
+* 2026-07-17: Docker 기반 PostgreSQL 개발 환경과 사용자 확인 명령 추가.
