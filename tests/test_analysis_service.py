@@ -63,3 +63,14 @@ def test_analysis_service_passes_matrix_range_to_repository() -> None:
 
     assert repository.requested_recent == 30
     assert result.total_draws == 1
+
+
+def test_analysis_service_requires_two_complete_matrix_periods() -> None:
+    repository = StubRepository()
+
+    try:
+        AnalysisService(repository).compare_matrices(recent=1)
+    except ValueError as exc:
+        assert "two complete matrix periods" in str(exc)
+    else:
+        raise AssertionError("matrix comparison should require two periods")

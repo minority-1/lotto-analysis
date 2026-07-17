@@ -7,6 +7,7 @@ from lotto_analysis.analysis import (
     analyze_gaps,
     analyze_matrix,
     analyze_relationships,
+    compare_matrices,
     compare_periods,
 )
 from lotto_analysis.models.analysis import (
@@ -14,7 +15,7 @@ from lotto_analysis.models.analysis import (
     GapAnalysisResult,
     PeriodComparisonResult,
 )
-from lotto_analysis.models.matrix import MatrixAnalysisResult
+from lotto_analysis.models.matrix import MatrixAnalysisResult, MatrixComparisonResult
 from lotto_analysis.models.relationship import RelationshipAnalysisResult
 from lotto_analysis.repositories import DrawRepository
 
@@ -69,3 +70,12 @@ class AnalysisService:
     def matrix(self, recent: int = 0) -> MatrixAnalysisResult:
         """Calculate a 7 by 7 number-frequency matrix for a draw range."""
         return analyze_matrix(self._repository.list_draws(recent=recent))
+
+    def compare_matrices(self, recent: int) -> MatrixComparisonResult:
+        """Compare the recent N-draw matrix with the immediately preceding N."""
+        if type(recent) is not int or recent <= 0:
+            raise ValueError("recent must be a positive integer")
+        draws = self._repository.list_draws()
+        if len(draws) < recent * 2:
+            raise ValueError("two complete matrix periods are required")
+        return compare_matrices(draws[-recent * 2 : -recent], draws[-recent:])

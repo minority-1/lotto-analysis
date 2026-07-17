@@ -2,7 +2,13 @@
 
 from lotto_analysis.models.collection import CollectionFailure, CollectionSummary
 from lotto_analysis.models.draw import LottoDraw
-from lotto_analysis.models.matrix import MatrixAnalysisResult, MatrixCell
+from lotto_analysis.models.matrix import (
+    DiagonalStatistics,
+    MatrixAnalysisResult,
+    MatrixCell,
+    MatrixCellComparison,
+    MatrixComparisonResult,
+)
 from lotto_analysis.models.database import DatabaseImportResult, DatabaseVerificationResult
 from lotto_analysis.models.analysis import (
     AnalysisSummary,
@@ -30,6 +36,7 @@ __all__ = [
     "CombinationFrequency",
     "CompanionFrequency",
     "DistanceFrequency",
+    "DiagonalStatistics",
     "AnalysisSummary",
     "BasicAnalysisResult",
     "BonusFollowupStatistics",
@@ -40,6 +47,8 @@ __all__ = [
     "LottoDraw",
     "MatrixAnalysisResult",
     "MatrixCell",
+    "MatrixCellComparison",
+    "MatrixComparisonResult",
     "LagOverlapStatistics",
     "NumberStatistics",
     "NumberComparison",

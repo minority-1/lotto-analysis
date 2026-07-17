@@ -4,7 +4,13 @@ from collections import Counter
 from typing import Iterable, Tuple
 
 from lotto_analysis.models.draw import LottoDraw
-from lotto_analysis.models.matrix import MatrixAnalysisResult, MatrixCell
+from lotto_analysis.models.matrix import (
+    DiagonalStatistics,
+    MatrixAnalysisResult,
+    MatrixCell,
+    MatrixCellComparison,
+    MatrixComparisonResult,
+)
 
 
 def analyze_matrix(draws: Iterable[LottoDraw]) -> MatrixAnalysisResult:
@@ -41,6 +47,42 @@ def analyze_matrix(draws: Iterable[LottoDraw]) -> MatrixAnalysisResult:
         ),  # type: ignore[arg-type]
         average_distinct_rows=distinct_row_total / total_draws,
         average_distinct_columns=distinct_column_total / total_draws,
+        diagonals=(
+            _diagonal_statistics("main", (1, 9, 17, 25, 33, 41), ordered_draws),
+            _diagonal_statistics(
+                "anti", (7, 13, 19, 25, 31, 37, 43), ordered_draws
+            ),
+        ),
+    )
+
+
+def compare_matrices(
+    baseline_draws: Iterable[LottoDraw], comparison_draws: Iterable[LottoDraw]
+) -> MatrixComparisonResult:
+    """Compare cell appearance rates between two non-empty draw periods."""
+    baseline = analyze_matrix(baseline_draws)
+    comparison = analyze_matrix(comparison_draws)
+    cells = tuple(
+        MatrixCellComparison(
+            row=baseline_cell.row,
+            column=baseline_cell.column,
+            number=baseline_cell.number,
+            baseline_count=baseline_cell.count,
+            comparison_count=comparison_cell.count,
+            baseline_rate=baseline_cell.draw_rate,
+            comparison_rate=comparison_cell.draw_rate,
+            rate_difference=comparison_cell.draw_rate - baseline_cell.draw_rate,
+        )
+        for baseline_cell, comparison_cell in zip(baseline.cells, comparison.cells)
+    )
+    return MatrixComparisonResult(
+        baseline_start_draw=baseline.start_draw,
+        baseline_end_draw=baseline.end_draw,
+        comparison_start_draw=comparison.start_draw,
+        comparison_end_draw=comparison.end_draw,
+        baseline_total_draws=baseline.total_draws,
+        comparison_total_draws=comparison.total_draws,
+        cells=cells,
     )
 
 
@@ -60,4 +102,19 @@ def _matrix_cell(
         number=number,
         count=count,
         draw_rate=count / total_draws,
+    )
+
+
+def _diagonal_statistics(
+    name: str, numbers: Tuple[int, ...], draws: Tuple[LottoDraw, ...]
+) -> DiagonalStatistics:
+    number_set = set(numbers)
+    appearances = tuple(len(number_set & set(draw.numbers)) for draw in draws)
+    draw_count = sum(count > 0 for count in appearances)
+    return DiagonalStatistics(
+        name=name,
+        numbers=numbers,
+        total_appearances=sum(appearances),
+        draw_count=draw_count,
+        draw_rate=draw_count / len(draws),
     )

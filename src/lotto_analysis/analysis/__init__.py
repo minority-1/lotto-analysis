@@ -3,7 +3,7 @@
 from lotto_analysis.analysis.basic import analyze_draws
 from lotto_analysis.analysis.comparison import compare_periods
 from lotto_analysis.analysis.gaps import analyze_gaps
-from lotto_analysis.analysis.matrix import analyze_matrix
+from lotto_analysis.analysis.matrix import analyze_matrix, compare_matrices
 from lotto_analysis.analysis.relationships import analyze_relationships
 
 __all__ = [
@@ -12,4 +12,5 @@ __all__ = [
     "analyze_matrix",
     "analyze_relationships",
     "compare_periods",
+    "compare_matrices",
 ]

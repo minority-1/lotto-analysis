@@ -17,6 +17,7 @@ from lotto_analysis.models import (
     CollectionSummary,
     GapAnalysisResult,
     MatrixAnalysisResult,
+    MatrixComparisonResult,
     PeriodComparisonResult,
     RelationshipAnalysisResult,
 )
@@ -100,6 +101,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     matrix_parser.add_argument("--recent", type=_positive_int, default=0)
     matrix_parser.add_argument("--export", action="store_true")
+    matrix_compare_parser = subparsers.add_parser(
+        "matrix-compare", help="compare previous and recent 7 by 7 matrices"
+    )
+    matrix_compare_parser.add_argument("recent", type=_positive_int)
+    matrix_compare_parser.add_argument("--export", action="store_true")
     subparsers.add_parser("db-upgrade", help="upgrade PostgreSQL schema")
     subparsers.add_parser("db-import", help="upsert processed CSV into PostgreSQL")
     subparsers.add_parser(
@@ -139,6 +145,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             )
         if args.command == "matrix":
             return _run_matrix(settings, args.recent, args.export)
+        if args.command == "matrix-compare":
+            return _run_matrix_comparison(settings, args.recent, args.export)
         if args.command == "db-upgrade":
             upgrade_database(settings.project_root)
             print("Database schema upgraded to head")
@@ -302,6 +310,26 @@ def _run_matrix(settings: Settings, recent: int, export: bool) -> int:
         suffix = "recent_{0}".format(recent) if recent else "all"
         path = write_analysis_json(
             settings.analysis_data_dir / "matrix_analysis_{0}.json".format(suffix),
+            result,
+        )
+        print("Export: {0}".format(path))
+    return 0
+
+
+def _run_matrix_comparison(settings: Settings, recent: int, export: bool) -> int:
+    """Compare previous and recent matrix periods from PostgreSQL."""
+    engine = create_database_engine(settings)
+    try:
+        result = AnalysisService(PostgresDrawRepository(engine)).compare_matrices(
+            recent
+        )
+    finally:
+        engine.dispose()
+    _print_matrix_comparison(result)
+    if export:
+        path = write_analysis_json(
+            settings.analysis_data_dir
+            / "matrix_comparison_previous_recent_{0}.json".format(recent),
             result,
         )
         print("Export: {0}".format(path))
@@ -560,6 +588,39 @@ def _print_matrix(result: MatrixAnalysisResult) -> None:
             result.average_distinct_rows, result.average_distinct_columns
         )
     )
+    for diagonal in result.diagonals:
+        print(
+            "{0} diagonal {1}: {2} appearances in {3} draws ({4:.2%})".format(
+                diagonal.name.capitalize(),
+                diagonal.numbers,
+                diagonal.total_appearances,
+                diagonal.draw_count,
+                diagonal.draw_rate,
+            )
+        )
+
+
+def _print_matrix_comparison(result: MatrixComparisonResult) -> None:
+    """Print cell rate differences as a fixed 7 by 7 matrix."""
+    print(
+        "Matrix comparison: previous {0}-{1} vs recent {2}-{3}; "
+        "cell format number:rate difference".format(
+            result.baseline_start_draw,
+            result.baseline_end_draw,
+            result.comparison_start_draw,
+            result.comparison_end_draw,
+        )
+    )
+    for row in range(7):
+        row_cells = result.cells[row * 7 : (row + 1) * 7]
+        print(
+            "  ".join(
+                "  -:    -"
+                if cell.number is None
+                else "{0:>2}:{1:>+5.1%}".format(cell.number, cell.rate_difference)
+                for cell in row_cells
+            )
+        )
 
 
 def _format_optional(value: object) -> str:
