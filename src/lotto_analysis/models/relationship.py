@@ -23,6 +23,25 @@ class CompanionFrequency:
 
 
 @dataclass(frozen=True)
+class DistanceFrequency:
+    """Describe one absolute distance among all number-pair observations."""
+
+    distance: int
+    count: int
+    observation_rate: float
+
+
+@dataclass(frozen=True)
+class LagOverlapStatistics:
+    """Describe overlaps with an exactly preceding draw-number lag."""
+
+    lag: int
+    compared_draws: int
+    overlap_distribution: Tuple[int, int, int, int, int, int, int]
+    average_overlap: float
+
+
+@dataclass(frozen=True)
 class RelationshipAnalysisResult:
     """Contain pair, triple, and optional anchor-number relationships."""
 
@@ -34,3 +53,12 @@ class RelationshipAnalysisResult:
     anchor_number: Optional[int]
     anchor_appearance_count: int
     companions: Tuple[CompanionFrequency, ...]
+    distances: Tuple[DistanceFrequency, ...]
+    adjacent_pair_count: int
+    adjacent_draw_count: int
+    adjacent_draw_rate: float
+    same_last_digit_pair_count: int
+    same_last_digit_draw_count: int
+    same_last_digit_draw_rate: float
+    consecutive_groups: Tuple[CombinationFrequency, ...]
+    lag_overlaps: Tuple[LagOverlapStatistics, ...]

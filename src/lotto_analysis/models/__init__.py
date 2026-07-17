@@ -17,6 +17,8 @@ from lotto_analysis.models.processing import ProcessingSummary, ValidationIssue
 from lotto_analysis.models.relationship import (
     CombinationFrequency,
     CompanionFrequency,
+    DistanceFrequency,
+    LagOverlapStatistics,
     RelationshipAnalysisResult,
 )
 
@@ -25,6 +27,7 @@ __all__ = [
     "CollectionSummary",
     "CombinationFrequency",
     "CompanionFrequency",
+    "DistanceFrequency",
     "AnalysisSummary",
     "BasicAnalysisResult",
     "DrawStatistics",
@@ -32,6 +35,7 @@ __all__ = [
     "DatabaseVerificationResult",
     "GapAnalysisResult",
     "LottoDraw",
+    "LagOverlapStatistics",
     "NumberStatistics",
     "NumberComparison",
     "NumberGapStatistics",

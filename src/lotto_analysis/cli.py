@@ -445,6 +445,43 @@ def _print_relationships(result: RelationshipAnalysisResult, top: int) -> None:
                 item.numbers, item.count, item.draw_rate
             )
         )
+    print(
+        "Adjacent: {0} pairs in {1} draws ({2:.2%}); same last digit: "
+        "{3} pairs in {4} draws ({5:.2%})".format(
+            result.adjacent_pair_count,
+            result.adjacent_draw_count,
+            result.adjacent_draw_rate,
+            result.same_last_digit_pair_count,
+            result.same_last_digit_draw_count,
+            result.same_last_digit_draw_rate,
+        )
+    )
+    print("Top distances: Distance  Count  Pair share")
+    for item in sorted(
+        result.distances, key=lambda value: (-value.count, value.distance)
+    )[:top]:
+        print(
+            "{0:>8}  {1:>5}  {2:>10.2%}".format(
+                item.distance, item.count, item.observation_rate
+            )
+        )
+    print("Top consecutive groups: Numbers  Count  Draw rate")
+    for item in result.consecutive_groups[:top]:
+        print(
+            "{0!s:>12}  {1:>5}  {2:>9.2%}".format(
+                item.numbers, item.count, item.draw_rate
+            )
+        )
+    print("Previous draw overlaps: Lag  Compared  Average  Distribution(0-6)")
+    for item in result.lag_overlaps:
+        print(
+            "{0:>3}  {1:>8}  {2:>7.2f}  {3}".format(
+                item.lag,
+                item.compared_draws,
+                item.average_overlap,
+                item.overlap_distribution,
+            )
+        )
     if result.anchor_number is not None:
         print(
             "Companions for {0} ({1} anchor appearances): Number  Count  Rate".format(
