@@ -4,7 +4,11 @@ from typing import Tuple
 
 import pytest
 
-from lotto_analysis.generators import NumberGenerationStrategy
+from lotto_analysis.generators import (
+    FrequencyWeightedStrategy,
+    NumberGenerationStrategy,
+    build_frequency_weights,
+)
 from lotto_analysis.models import GenerationConditions, LottoDraw
 from lotto_analysis.repositories import DrawRepository
 from lotto_analysis.services import GenerationService
@@ -88,6 +92,36 @@ def test_generation_stops_and_explains_impossible_filters() -> None:
     assert result.rejection_counts == (("exact_historical", 5),)
     assert result.message is not None
     assert "Generated 0 of 1" in result.message
+
+
+def test_frequency_weights_apply_smoothing_and_mean_cap() -> None:
+    draws = StubRepository().list_draws()
+
+    weights = build_frequency_weights(draws)
+
+    assert len(weights) == 45
+    assert weights[:6] == pytest.approx((1.7,) * 6)
+    assert weights[6:] == pytest.approx((1.0,) * 39)
+
+
+def test_frequency_strategy_is_reproducible_without_replacement() -> None:
+    draws = StubRepository().list_draws()
+    strategy = FrequencyWeightedStrategy(build_frequency_weights(draws), len(draws))
+    conditions = GenerationConditions(
+        count=2,
+        required_numbers=(10,),
+        excluded_numbers=(45,),
+        seed=77,
+    )
+
+    first = GenerationService(StubRepository(), strategy).generate(conditions)
+    second = GenerationService(StubRepository(), strategy).generate(conditions)
+
+    assert first == second
+    assert first.strategy == "frequency_weighted"
+    assert first.strategy_details[0] == ("source_draws", "1")
+    assert all(len(set(item.numbers)) == 6 for item in first.combinations)
+    assert all(10 in item.numbers and 45 not in item.numbers for item in first.combinations)
 
 
 @pytest.mark.parametrize(

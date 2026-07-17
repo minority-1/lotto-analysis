@@ -11,6 +11,7 @@ from lotto_analysis.collectors import CollectorError, DhlotteryDrawCollector
 from lotto_analysis.config import Settings
 from lotto_analysis.database import create_database_engine
 from lotto_analysis.database.migrations import upgrade_database
+from lotto_analysis.generators import FrequencyWeightedStrategy, build_frequency_weights
 from lotto_analysis.logging_config import configure_logging
 from lotto_analysis.models import (
     BasicAnalysisResult,
@@ -126,6 +127,10 @@ def build_parser() -> argparse.ArgumentParser:
         "generate", help="generate uniformly random combinations under conditions"
     )
     generate_parser.add_argument("--count", type=_positive_int, default=5)
+    generate_parser.add_argument(
+        "--strategy", choices=("uniform", "frequency"), default="uniform"
+    )
+    generate_parser.add_argument("--weight-recent", type=_positive_int, default=0)
     generate_parser.add_argument("--seed", type=int)
     generate_parser.add_argument("--include", type=_number_list, default=())
     generate_parser.add_argument("--exclude", type=_number_list, default=())
@@ -447,15 +452,42 @@ def _run_generation(settings: Settings, args: argparse.Namespace) -> int:
     )
     engine = create_database_engine(settings)
     try:
-        result = GenerationService(PostgresDrawRepository(engine)).generate(conditions)
+        repository = PostgresDrawRepository(engine)
+        strategy = None
+        if args.strategy == "frequency":
+            weight_draws = repository.list_draws(recent=args.weight_recent)
+            if args.weight_recent and len(weight_draws) < args.weight_recent:
+                raise ValueError(
+                    "weight-recent {0} exceeds available draw count {1}".format(
+                        args.weight_recent, len(weight_draws)
+                    )
+                )
+            strategy = FrequencyWeightedStrategy(
+                build_frequency_weights(weight_draws), len(weight_draws)
+            )
+        elif args.weight_recent:
+            raise ValueError("--weight-recent requires --strategy frequency")
+        result = GenerationService(repository, strategy).generate(conditions)
     finally:
         engine.dispose()
     _print_generation(result)
     if args.export:
-        suffix = "seed_{0}".format(args.seed) if args.seed is not None else "latest"
+        strategy_suffix = args.strategy
+        if args.strategy == "frequency":
+            scope = (
+                "recent_{0}".format(args.weight_recent)
+                if args.weight_recent
+                else "all"
+            )
+            strategy_suffix = "frequency_{0}".format(scope)
+        seed_suffix = (
+            "seed_{0}".format(args.seed) if args.seed is not None else "latest"
+        )
         path = write_analysis_json(
             settings.analysis_data_dir
-            / "generated_combinations_{0}.json".format(suffix),
+            / "generated_combinations_{0}_{1}.json".format(
+                strategy_suffix, seed_suffix
+            ),
             result,
         )
         print("Export: {0}".format(path))
@@ -832,6 +864,15 @@ def _print_generation(result: GenerationResult) -> None:
             result.seed if result.seed is not None else "random",
         )
     )
+    if result.strategy_details:
+        print(
+            "Strategy details: {0}".format(
+                " / ".join(
+                    "{0}={1}".format(name, value)
+                    for name, value in result.strategy_details
+                )
+            )
+        )
     print("Numbers                 Odd/Even  Low/High  Sum  Prime  AC  Consecutive  Past max")
     for item in result.combinations:
         print(

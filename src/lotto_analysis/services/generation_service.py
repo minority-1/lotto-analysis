@@ -69,6 +69,7 @@ class GenerationService:
             ).format(len(generated), conditions.count, attempts, common or "none")
         return GenerationResult(
             strategy=self._strategy.name,
+            strategy_details=self._strategy.details,
             requested_count=conditions.count,
             combinations=tuple(generated),
             attempts=attempts,

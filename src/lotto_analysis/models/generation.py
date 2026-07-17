@@ -82,6 +82,7 @@ class GenerationResult:
     """Describe a bounded generation run and whether it fully completed."""
 
     strategy: str
+    strategy_details: Tuple[Tuple[str, str], ...]
     requested_count: int
     combinations: Tuple[GeneratedCombination, ...]
     attempts: int

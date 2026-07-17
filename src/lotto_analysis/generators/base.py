@@ -10,6 +10,11 @@ class NumberGenerationStrategy(ABC):
 
     name: str
 
+    @property
+    def details(self) -> Tuple[Tuple[str, str], ...]:
+        """Return serializable strategy parameters for transparent output."""
+        return ()
+
     @abstractmethod
     def generate_candidate(
         self,

@@ -143,6 +143,10 @@ def test_parser_accepts_generation_command() -> None:
             "generate",
             "--count",
             "3",
+            "--strategy",
+            "frequency",
+            "--weight-recent",
+            "50",
             "--seed",
             "42",
             "--include",
@@ -158,6 +162,8 @@ def test_parser_accepts_generation_command() -> None:
 
     assert args.command == "generate"
     assert args.count == 3
+    assert args.strategy == "frequency"
+    assert args.weight_recent == 50
     assert args.seed == 42
     assert args.include == (1, 2)
     assert args.exclude == (44, 45)
