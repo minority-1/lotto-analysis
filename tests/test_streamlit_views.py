@@ -1,12 +1,13 @@
 from datetime import date
 
-from lotto_analysis.analysis import analyze_matrix
-from lotto_analysis.models import LottoDraw
-from lotto_analysis.ui.pattern_analysis import matrix_count_rows
-from lotto_analysis.ui.relationship_analysis import combination_rows
-from lotto_analysis.models import CombinationFrequency
-from lotto_analysis.ui.generation import parse_number_text, parse_optional_seed
 import pytest
+
+from lotto_analysis.analysis import analyze_gaps, analyze_matrix, compare_periods
+from lotto_analysis.models import CombinationFrequency, LottoDraw
+from lotto_analysis.ui.generation import parse_number_text, parse_optional_seed
+from lotto_analysis.ui.pattern_analysis import matrix_count_rows
+from lotto_analysis.ui.period_and_gaps import comparison_rows, gap_rows
+from lotto_analysis.ui.relationship_analysis import combination_rows
 
 
 def test_matrix_count_rows_formats_valid_and_empty_cells() -> None:
@@ -49,3 +50,31 @@ def test_generation_input_parsers() -> None:
         parse_number_text("46")
     with pytest.raises(ValueError, match="정수"):
         parse_optional_seed("abc")
+
+
+def test_period_and_gap_rows_preserve_descriptive_values() -> None:
+    baseline = analyze_draws_for_view(1, (1, 2, 3, 4, 5, 6))
+    recent = analyze_draws_for_view(2, (1, 7, 8, 9, 10, 11))
+
+    comparison = comparison_rows(
+        compare_periods((baseline,), (recent,), "previous", "recent")
+    )
+    gaps = gap_rows(analyze_gaps((baseline, recent)))
+
+    assert comparison[0]["출현률 차이"] == 0.0
+    assert comparison[1]["출현률 차이"] == -1.0
+    assert gaps[0]["평균 간격"] == 1
+    assert gaps[44]["평균 간격"] == "-"
+
+
+def analyze_draws_for_view(draw_number: int, numbers: tuple) -> LottoDraw:
+    return LottoDraw(
+        draw_number=draw_number,
+        draw_date=date(2026, 7, draw_number),
+        numbers=numbers,  # type: ignore[arg-type]
+        bonus_number=45,
+        first_prize_winners=1,
+        first_prize_amount=100,
+        total_sales_amount=1000,
+        collected_at=None,
+    )

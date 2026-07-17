@@ -11,6 +11,7 @@ from lotto_analysis.ui.dashboard import render_dashboard
 from lotto_analysis.ui.pattern_analysis import render_pattern_analysis
 from lotto_analysis.ui.relationship_analysis import render_relationship_analysis
 from lotto_analysis.ui.generation import render_generation
+from lotto_analysis.ui.period_and_gaps import render_period_and_gaps
 
 
 st.set_page_config(page_title="Lotto Analysis", page_icon="🎱", layout="wide")
@@ -32,6 +33,7 @@ def main() -> None:
         "패턴 분석": render_pattern_analysis,
         "관계 분석": render_relationship_analysis,
         "번호 생성": render_generation,
+        "기간·간격 분석": render_period_and_gaps,
     }
     page = st.sidebar.radio("화면", tuple(pages))
     try:
