@@ -5,6 +5,8 @@ from lotto_analysis.models import LottoDraw
 from lotto_analysis.ui.pattern_analysis import matrix_count_rows
 from lotto_analysis.ui.relationship_analysis import combination_rows
 from lotto_analysis.models import CombinationFrequency
+from lotto_analysis.ui.generation import parse_number_text, parse_optional_seed
+import pytest
 
 
 def test_matrix_count_rows_formats_valid_and_empty_cells() -> None:
@@ -33,3 +35,17 @@ def test_combination_rows_formats_pair_frequency() -> None:
     )
 
     assert rows == [{"번호": "1, 2", "출현": 3, "회차당 비율": 0.25}]
+
+
+def test_generation_input_parsers() -> None:
+    assert parse_number_text("7, 2,21") == (2, 7, 21)
+    assert parse_number_text("  ") == ()
+    assert parse_optional_seed("42") == 42
+    assert parse_optional_seed("") is None
+
+    with pytest.raises(ValueError, match="중복"):
+        parse_number_text("1,1")
+    with pytest.raises(ValueError, match="1부터 45"):
+        parse_number_text("46")
+    with pytest.raises(ValueError, match="정수"):
+        parse_optional_seed("abc")
