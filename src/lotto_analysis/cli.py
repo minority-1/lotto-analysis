@@ -16,6 +16,7 @@ from lotto_analysis.models import (
     BasicAnalysisResult,
     CollectionSummary,
     GapAnalysisResult,
+    MatrixAnalysisResult,
     PeriodComparisonResult,
     RelationshipAnalysisResult,
 )
@@ -94,6 +95,11 @@ def build_parser() -> argparse.ArgumentParser:
     relationships_parser.add_argument("--number", type=_lotto_number)
     relationships_parser.add_argument("--top", type=_positive_int, default=20)
     relationships_parser.add_argument("--export", action="store_true")
+    matrix_parser = subparsers.add_parser(
+        "matrix", help="analyze a 7 by 7 number-frequency matrix"
+    )
+    matrix_parser.add_argument("--recent", type=_positive_int, default=0)
+    matrix_parser.add_argument("--export", action="store_true")
     subparsers.add_parser("db-upgrade", help="upgrade PostgreSQL schema")
     subparsers.add_parser("db-import", help="upsert processed CSV into PostgreSQL")
     subparsers.add_parser(
@@ -131,6 +137,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             return _run_relationships(
                 settings, args.recent, args.number, args.top, args.export
             )
+        if args.command == "matrix":
+            return _run_matrix(settings, args.recent, args.export)
         if args.command == "db-upgrade":
             upgrade_database(settings.project_root)
             print("Database schema upgraded to head")
@@ -276,6 +284,24 @@ def _run_relationships(
         path = write_analysis_json(
             settings.analysis_data_dir
             / "relationship_analysis_{0}.json".format(suffix),
+            result,
+        )
+        print("Export: {0}".format(path))
+    return 0
+
+
+def _run_matrix(settings: Settings, recent: int, export: bool) -> int:
+    """Analyze the PostgreSQL draw data as a 7 by 7 matrix."""
+    engine = create_database_engine(settings)
+    try:
+        result = AnalysisService(PostgresDrawRepository(engine)).matrix(recent=recent)
+    finally:
+        engine.dispose()
+    _print_matrix(result)
+    if export:
+        suffix = "recent_{0}".format(recent) if recent else "all"
+        path = write_analysis_json(
+            settings.analysis_data_dir / "matrix_analysis_{0}.json".format(suffix),
             result,
         )
         print("Export: {0}".format(path))
@@ -504,6 +530,36 @@ def _print_relationships(result: RelationshipAnalysisResult, top: int) -> None:
                     item.number, item.count, item.conditional_rate
                 )
             )
+
+
+def _print_matrix(result: MatrixAnalysisResult) -> None:
+    """Print number counts in their fixed 7 by 7 positions."""
+    print(
+        "7x7 matrix for {0} draws ({1}-{2}); cell format number:count".format(
+            result.total_draws, result.start_draw, result.end_draw
+        )
+    )
+    for row in range(7):
+        row_cells = result.cells[row * 7 : (row + 1) * 7]
+        print(
+            "  ".join(
+                "  -:  -"
+                if cell.number is None
+                else "{0:>2}:{1:>3}".format(cell.number, cell.count)
+                for cell in row_cells
+            )
+            + "  | row {0}: {1}".format(row + 1, result.row_totals[row])
+        )
+    print(
+        "Column totals: {0}".format(
+            " / ".join(str(total) for total in result.column_totals)
+        )
+    )
+    print(
+        "Average distinct rows {0:.2f}; columns {1:.2f}".format(
+            result.average_distinct_rows, result.average_distinct_columns
+        )
+    )
 
 
 def _format_optional(value: object) -> str:

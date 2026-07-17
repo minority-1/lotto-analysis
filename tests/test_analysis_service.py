@@ -54,3 +54,12 @@ def test_analysis_service_passes_relationship_options_to_repository() -> None:
     assert repository.requested_recent == 100
     assert result.anchor_number == 1
     assert result.anchor_appearance_count == 1
+
+
+def test_analysis_service_passes_matrix_range_to_repository() -> None:
+    repository = StubRepository()
+
+    result = AnalysisService(repository).matrix(recent=30)
+
+    assert repository.requested_recent == 30
+    assert result.total_draws == 1

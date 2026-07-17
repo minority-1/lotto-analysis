@@ -2,6 +2,7 @@
 
 from lotto_analysis.models.collection import CollectionFailure, CollectionSummary
 from lotto_analysis.models.draw import LottoDraw
+from lotto_analysis.models.matrix import MatrixAnalysisResult, MatrixCell
 from lotto_analysis.models.database import DatabaseImportResult, DatabaseVerificationResult
 from lotto_analysis.models.analysis import (
     AnalysisSummary,
@@ -37,6 +38,8 @@ __all__ = [
     "DatabaseVerificationResult",
     "GapAnalysisResult",
     "LottoDraw",
+    "MatrixAnalysisResult",
+    "MatrixCell",
     "LagOverlapStatistics",
     "NumberStatistics",
     "NumberComparison",

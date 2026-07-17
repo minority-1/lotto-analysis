@@ -100,3 +100,11 @@ def test_parser_accepts_relationship_command() -> None:
     assert args.number == 7
     assert args.top == 10
     assert args.export is True
+
+
+def test_parser_accepts_matrix_command() -> None:
+    args = cli.build_parser().parse_args(["matrix", "--recent", "50", "--export"])
+
+    assert args.command == "matrix"
+    assert args.recent == 50
+    assert args.export is True

@@ -5,6 +5,7 @@ from typing import Optional
 from lotto_analysis.analysis import (
     analyze_draws,
     analyze_gaps,
+    analyze_matrix,
     analyze_relationships,
     compare_periods,
 )
@@ -13,6 +14,7 @@ from lotto_analysis.models.analysis import (
     GapAnalysisResult,
     PeriodComparisonResult,
 )
+from lotto_analysis.models.matrix import MatrixAnalysisResult
 from lotto_analysis.models.relationship import RelationshipAnalysisResult
 from lotto_analysis.repositories import DrawRepository
 
@@ -63,3 +65,7 @@ class AnalysisService:
         return analyze_relationships(
             self._repository.list_draws(recent=recent), anchor_number=anchor_number
         )
+
+    def matrix(self, recent: int = 0) -> MatrixAnalysisResult:
+        """Calculate a 7 by 7 number-frequency matrix for a draw range."""
+        return analyze_matrix(self._repository.list_draws(recent=recent))

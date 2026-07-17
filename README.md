@@ -25,7 +25,7 @@
 - CSV Repository와 기본 기술통계 분석
 - PostgreSQL 기반 번호쌍·3개 조합·동반 출현 분석
 
-SQLite는 제외했으며 PostgreSQL 17을 Docker Compose로 실행합니다. PostgreSQL 스키마·Repository와 CSV 동기화·검증 기능까지 구현했으며, 고급 분석과 Streamlit 화면은 아직 구현하지 않았습니다.
+SQLite는 제외했으며 PostgreSQL 17을 Docker Compose로 실행합니다. PostgreSQL 저장과 관계 분석, 7×7 행렬까지 구현했으며 나머지 고급 분석과 Streamlit 화면은 아직 구현하지 않았습니다.
 
 ## 요구 사항
 
@@ -215,6 +215,20 @@ lotto-analysis relationships --recent 100 --number 7 --export
 - 각 회차의 보너스 번호가 정확히 1·2·3회 뒤 일반번호로 나온 횟수와 비율
 
 최근 N회 분석의 이전·이후 회차 비교는 선택 범위 밖의 회차를 가져오지 않습니다. 따라서 최근 100회의 1회 간격 비교 대상은 99개입니다. 보너스 후속 출현 비율의 분모도 실제 후속 회차가 범위 안에 있는 기준 회차 수입니다. 모두 과거 관계 기록이며 미래 당첨 확률이나 번호 간 인과관계를 의미하지 않습니다.
+
+### 7×7 번호 행렬
+
+PostgreSQL의 일반 당첨번호 출현 횟수를 1~7, 8~14 순서의 고정 7×7 위치에 배치합니다. 46~49에 해당하는 마지막 네 칸은 빈 셀입니다.
+
+```bash
+lotto-analysis matrix
+lotto-analysis matrix --recent 100
+lotto-analysis matrix --recent 100 --export
+```
+
+터미널 셀은 `번호:출현 횟수` 형식이며 행·열별 전체 출현 횟수와 회차당 사용한 서로 다른 행·열의 평균도 표시합니다. JSON에는 각 셀의 출현 횟수와 `출현 횟수 ÷ 분석 회차 수` 비율이 함께 저장됩니다.
+
+행렬은 번호의 위치별 과거 분포를 보기 위한 표현 방식입니다. 특정 위치나 행·열의 빈도가 미래 당첨 가능성을 높인다는 의미가 아닙니다.
 
 ## 환경변수
 
