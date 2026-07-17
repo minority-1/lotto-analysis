@@ -9,6 +9,7 @@ from lotto_analysis.models.analysis import (
     NumberStatistics,
 )
 from lotto_analysis.models.draw import LottoDraw
+from lotto_analysis.analysis.summary import summarize_draws
 
 
 def analyze_draws(draws: Sequence[LottoDraw]) -> BasicAnalysisResult:
@@ -19,12 +20,14 @@ def analyze_draws(draws: Sequence[LottoDraw]) -> BasicAnalysisResult:
     draw_numbers = tuple(draw.draw_number for draw in ordered)
     if len(draw_numbers) != len(set(draw_numbers)):
         raise ValueError("analysis input contains duplicate draw numbers")
+    draw_statistics = _draw_statistics(ordered)
     return BasicAnalysisResult(
         total_draws=len(ordered),
         start_draw=ordered[0].draw_number,
         end_draw=ordered[-1].draw_number,
         number_statistics=_number_statistics(ordered),
-        draw_statistics=_draw_statistics(ordered),
+        draw_statistics=draw_statistics,
+        summary=summarize_draws(ordered, draw_statistics),
     )
 
 
@@ -102,4 +105,3 @@ def _draw_statistics(draws: Tuple[LottoDraw, ...]) -> Tuple[DrawStatistics, ...]
         )
         previous_numbers = current_numbers
     return tuple(results)
-

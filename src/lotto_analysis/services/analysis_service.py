@@ -1,7 +1,11 @@
 """Application service for descriptive Lotto analysis."""
 
-from lotto_analysis.analysis import analyze_draws
-from lotto_analysis.models.analysis import BasicAnalysisResult
+from lotto_analysis.analysis import analyze_draws, analyze_gaps, compare_periods
+from lotto_analysis.models.analysis import (
+    BasicAnalysisResult,
+    GapAnalysisResult,
+    PeriodComparisonResult,
+)
 from lotto_analysis.repositories import DrawRepository
 
 
@@ -15,3 +19,31 @@ class AnalysisService:
         """Analyze all draws or only the latest requested number of draws."""
         return analyze_draws(self._repository.list_draws(recent=recent))
 
+    def compare(
+        self, recent: int, against_all: bool = False
+    ) -> PeriodComparisonResult:
+        """Compare recent draws with all history or the preceding equal period."""
+        if type(recent) is not int or recent <= 0:
+            raise ValueError("recent must be a positive integer")
+        draws = self._repository.list_draws()
+        if len(draws) < recent:
+            raise ValueError("recent exceeds the available draw count")
+        comparison = draws[-recent:]
+        if against_all:
+            baseline = draws
+            baseline_label = "all"
+        else:
+            if len(draws) < recent * 2:
+                raise ValueError("two complete periods are required for comparison")
+            baseline = draws[-recent * 2 : -recent]
+            baseline_label = "previous_{0}".format(recent)
+        return compare_periods(
+            baseline,
+            comparison,
+            baseline_label=baseline_label,
+            comparison_label="recent_{0}".format(recent),
+        )
+
+    def gaps(self, recent: int = 0) -> GapAnalysisResult:
+        """Calculate appearance-gap statistics for all or recent draws."""
+        return analyze_gaps(self._repository.list_draws(recent=recent))

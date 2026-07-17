@@ -34,3 +34,13 @@ def test_analysis_service_passes_range_to_repository() -> None:
     assert repository.requested_recent == 50
     assert result.total_draws == 1
 
+
+def test_analysis_service_requires_two_complete_comparison_periods() -> None:
+    repository = StubRepository()
+
+    try:
+        AnalysisService(repository).compare(recent=1)
+    except ValueError as exc:
+        assert "two complete periods" in str(exc)
+    else:
+        raise AssertionError("comparison should require two periods")

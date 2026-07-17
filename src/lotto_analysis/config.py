@@ -22,6 +22,7 @@ class Settings:
     data_dir: Path
     raw_data_dir: Path
     processed_data_dir: Path
+    analysis_data_dir: Path
     collection_history_dir: Path
     database_dir: Path
     log_dir: Path
@@ -112,6 +113,10 @@ class Settings:
                 env.get("LOTTO_PROCESSED_DATA_DIR", str(data_dir / "processed")),
                 root,
             ),
+            analysis_data_dir=_resolve_path(
+                env.get("LOTTO_ANALYSIS_DATA_DIR", str(data_dir / "analysis")),
+                root,
+            ),
             collection_history_dir=_resolve_path(
                 env.get(
                     "LOTTO_COLLECTION_HISTORY_DIR",
@@ -146,6 +151,7 @@ class Settings:
             self.data_dir,
             self.raw_data_dir,
             self.processed_data_dir,
+            self.analysis_data_dir,
             self.collection_history_dir,
             self.database_dir,
             self.log_dir,

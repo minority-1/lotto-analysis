@@ -12,6 +12,7 @@ def test_settings_use_project_relative_defaults(tmp_path: Path) -> None:
     assert settings.data_dir == (tmp_path / "data").resolve()
     assert settings.raw_data_dir == (tmp_path / "data" / "raw").resolve()
     assert settings.processed_data_dir == (tmp_path / "data" / "processed").resolve()
+    assert settings.analysis_data_dir == (tmp_path / "data" / "analysis").resolve()
     assert settings.collection_history_dir == (
         tmp_path / "data" / "collection_history"
     ).resolve()
@@ -32,6 +33,7 @@ def test_settings_honor_path_overrides(tmp_path: Path) -> None:
             "LOTTO_REQUEST_RETRY_BACKOFF_SECONDS": "0.75",
             "LOTTO_USER_AGENT": "test-agent",
             "LOTTO_COLLECTION_HISTORY_DIR": "history",
+            "LOTTO_ANALYSIS_DATA_DIR": "analysis-output",
             "LOTTO_LOG_FILE": "custom.log",
             "LOTTO_LOG_MAX_BYTES": "1024",
             "LOTTO_LOG_BACKUP_COUNT": "2",
@@ -49,6 +51,7 @@ def test_settings_honor_path_overrides(tmp_path: Path) -> None:
     assert settings.request_retry_backoff_seconds == 0.75
     assert settings.user_agent == "test-agent"
     assert settings.collection_history_dir == (tmp_path / "history").resolve()
+    assert settings.analysis_data_dir == (tmp_path / "analysis-output").resolve()
     assert settings.log_file == (tmp_path / "custom.log").resolve()
     assert settings.log_max_bytes == 1024
     assert settings.log_backup_count == 2
@@ -121,6 +124,7 @@ def test_ensure_directories_creates_runtime_paths(tmp_path: Path) -> None:
 
     assert settings.raw_data_dir.is_dir()
     assert settings.processed_data_dir.is_dir()
+    assert settings.analysis_data_dir.is_dir()
     assert settings.collection_history_dir.is_dir()
     assert settings.database_dir.is_dir()
     assert settings.log_dir.is_dir()

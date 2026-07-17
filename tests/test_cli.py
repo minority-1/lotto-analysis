@@ -69,3 +69,15 @@ def test_parser_accepts_recent_analysis_command() -> None:
 
     assert args.command == "analyze"
     assert args.recent == 50
+
+
+def test_parser_accepts_comparison_and_gap_commands() -> None:
+    comparison = cli.build_parser().parse_args(
+        ["compare", "50", "--against-all", "--export"]
+    )
+    gaps = cli.build_parser().parse_args(["gaps", "--recent", "100"])
+
+    assert comparison.recent == 50
+    assert comparison.against_all is True
+    assert comparison.export is True
+    assert gaps.recent == 100

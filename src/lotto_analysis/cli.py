@@ -8,10 +8,16 @@ from typing import Optional, Sequence
 from lotto_analysis.collectors import CollectorError, DhlotteryDrawCollector
 from lotto_analysis.config import Settings
 from lotto_analysis.logging_config import configure_logging
-from lotto_analysis.models import BasicAnalysisResult, CollectionSummary
+from lotto_analysis.models import (
+    BasicAnalysisResult,
+    CollectionSummary,
+    GapAnalysisResult,
+    PeriodComparisonResult,
+)
 from lotto_analysis.repositories import CsvDrawRepository
 from lotto_analysis.services import AnalysisService, CollectionService, ProcessingService
 from lotto_analysis.storage import CollectionHistoryStore, RawJsonStore
+from lotto_analysis.storage.analysis_json import write_analysis_json
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -55,6 +61,22 @@ def build_parser() -> argparse.ArgumentParser:
         default=0,
         help="analyze only the latest N draws",
     )
+    analyze_parser.add_argument(
+        "--export", action="store_true", help="write the complete result as JSON"
+    )
+    compare_parser = subparsers.add_parser(
+        "compare", help="compare recent draws with another period"
+    )
+    compare_parser.add_argument("recent", type=_positive_int)
+    compare_parser.add_argument(
+        "--against-all", action="store_true", help="compare all history with recent N"
+    )
+    compare_parser.add_argument("--export", action="store_true")
+    gaps_parser = subparsers.add_parser(
+        "gaps", help="calculate historical number appearance gaps"
+    )
+    gaps_parser.add_argument("--recent", type=_positive_int, default=0)
+    gaps_parser.add_argument("--export", action="store_true")
     return parser
 
 
@@ -76,7 +98,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         if args.command == "process":
             return _run_processing(settings)
         if args.command == "analyze":
-            return _run_analysis(settings, recent=args.recent)
+            return _run_analysis(settings, recent=args.recent, export=args.export)
+        if args.command == "compare":
+            return _run_comparison(
+                settings, args.recent, args.against_all, args.export
+            )
+        if args.command == "gaps":
+            return _run_gaps(settings, args.recent, args.export)
         raw_store = RawJsonStore(settings.raw_data_dir)
         collector = DhlotteryDrawCollector(
             settings=settings,
@@ -140,12 +168,54 @@ def _run_processing(settings: Settings) -> int:
     return 1 if summary.issues or summary.missing_draws else 0
 
 
-def _run_analysis(settings: Settings, recent: int) -> int:
+def _run_analysis(settings: Settings, recent: int, export: bool = False) -> int:
     """Calculate and print first-stage descriptive statistics."""
     result = AnalysisService(
         CsvDrawRepository(settings.processed_data_dir / "lotto_draws.csv")
     ).analyze(recent=recent)
     _print_analysis(result)
+    if export:
+        suffix = "recent_{0}".format(recent) if recent else "all"
+        path = write_analysis_json(
+            settings.analysis_data_dir / "basic_analysis_{0}.json".format(suffix),
+            result,
+        )
+        print("Export: {0}".format(path))
+    return 0
+
+
+def _run_comparison(
+    settings: Settings, recent: int, against_all: bool, export: bool
+) -> int:
+    """Compare two periods and optionally export the complete result."""
+    result = AnalysisService(
+        CsvDrawRepository(settings.processed_data_dir / "lotto_draws.csv")
+    ).compare(recent=recent, against_all=against_all)
+    _print_comparison(result)
+    if export:
+        baseline = "all" if against_all else "previous"
+        path = write_analysis_json(
+            settings.analysis_data_dir
+            / "comparison_{0}_recent_{1}.json".format(baseline, recent),
+            result,
+        )
+        print("Export: {0}".format(path))
+    return 0
+
+
+def _run_gaps(settings: Settings, recent: int, export: bool) -> int:
+    """Calculate number gaps and optionally export the complete result."""
+    result = AnalysisService(
+        CsvDrawRepository(settings.processed_data_dir / "lotto_draws.csv")
+    ).gaps(recent=recent)
+    _print_gaps(result)
+    if export:
+        suffix = "recent_{0}".format(recent) if recent else "all"
+        path = write_analysis_json(
+            settings.analysis_data_dir / "gap_analysis_{0}.json".format(suffix),
+            result,
+        )
+        print("Export: {0}".format(path))
     return 0
 
 
@@ -199,6 +269,69 @@ def _print_analysis(result: BasicAnalysisResult) -> None:
                 item.absence_draws,
             )
         )
+
+
+def _print_comparison(result: PeriodComparisonResult) -> None:
+    """Print number-rate differences between two historical periods."""
+    print(
+        "Compared {0} ({1}-{2}, {3} draws) with {4} ({5}-{6}, {7} draws)".format(
+            result.baseline_label,
+            result.baseline_start_draw,
+            result.baseline_end_draw,
+            result.baseline_total_draws,
+            result.comparison_label,
+            result.comparison_start_draw,
+            result.comparison_end_draw,
+            result.comparison_total_draws,
+        )
+    )
+    print("Number  Base rate  Recent rate  Difference  Rank change")
+    for item in sorted(
+        result.numbers, key=lambda value: (-abs(value.rate_difference), value.number)
+    ):
+        print(
+            "{0:>6}  {1:>9.2%}  {2:>11.2%}  {3:>+10.2%}  {4:>+11}".format(
+                item.number,
+                item.baseline_rate,
+                item.comparison_rate,
+                item.rate_difference,
+                item.rank_change,
+            )
+        )
+
+
+def _print_gaps(result: GapAnalysisResult) -> None:
+    """Print historical appearance-gap statistics for numbers 1 through 45."""
+    print(
+        "Gap analysis for {0} draws ({1}-{2})".format(
+            result.total_draws, result.start_draw, result.end_draw
+        )
+    )
+    print("Number  Appearances  Mean  Median  Min  Max  Latest  Absent  Std dev")
+    for item in result.numbers:
+        print(
+            "{0:>6}  {1:>11}  {2:>4}  {3:>6}  {4:>3}  {5:>3}  "
+            "{6:>6}  {7:>6}  {8:>7}".format(
+                item.number,
+                len(item.appearance_draws),
+                _format_optional(item.mean_gap),
+                _format_optional(item.median_gap),
+                _format_optional(item.minimum_gap),
+                _format_optional(item.maximum_gap),
+                _format_optional(item.latest_gap),
+                item.current_absence,
+                _format_optional(item.gap_standard_deviation),
+            )
+        )
+
+
+def _format_optional(value: object) -> str:
+    """Format an optional numeric statistic for compact CLI output."""
+    if value is None:
+        return "-"
+    if isinstance(value, float):
+        return "{0:.2f}".format(value)
+    return str(value)
 
 
 def _positive_int(value: str) -> int:

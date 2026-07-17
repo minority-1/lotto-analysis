@@ -151,6 +151,25 @@ lotto-analysis analyze --recent 50
 
 새로운 회차를 수집·정제하면 전체 건수와 마지막 회차는 달라질 수 있다. 분석 수치는 미래 당첨 가능성을 의미하지 않는다.
 
+## PostgreSQL 전 분석 확인
+
+```bash
+lotto-analysis analyze --export
+lotto-analysis compare 50 --export
+lotto-analysis compare 50 --against-all
+lotto-analysis gaps --export
+```
+
+확인 항목:
+
+* `[대기]` `data/analysis/basic_analysis_all.json` 생성 확인
+* `[대기]` 직전 50회와 최근 50회 범위가 각각 `1133-1182`, `1183-1232`로 표시되는지 확인
+* `[대기]` 전체와 최근 50회 비교가 `1-1232`, `1183-1232`로 표시되는지 확인
+* `[대기]` 출현 간격 분석에 번호 1~45와 평균·중앙·최소·최대·최근·미출현·표준편차가 표시되는지 확인
+* `[대기]` `data/analysis/comparison_previous_recent_50.json`과 `gap_analysis_all.json` 생성 확인
+
+새 회차가 추가되면 위 회차 범위는 달라진다. 이 확인을 마치면 PostgreSQL 설치·Repository 구현 단계로 진행할 수 있다.
+
 이 단계의 구체적인 생성·수정 파일은 구현 전에 별도로 설명한다.
 
 ## 변경 이력
@@ -163,3 +182,4 @@ lotto-analysis analyze --recent 50
 * 2026-07-15: P1·P2 리뷰 보완 완료, 전체 테스트와 기존 원본 필수 필드 검사 통과.
 * 2026-07-15: SQLite 제외 결정과 원본 검증·정제 CSV 생성 기능 구현.
 * 2026-07-17: CSV Repository와 1차 기본 통계 분석 및 사용자 확인 명령 추가.
+* 2026-07-17: 분석 요약 JSON, 기간 비교와 출현 간격 분석 및 DB 전 확인 명령 추가.

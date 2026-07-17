@@ -51,6 +51,12 @@ def test_analyze_draws_calculates_draw_characteristics() -> None:
     assert first.previous_draw_overlap is None
     assert second.section_counts == (4, 2, 0, 0, 0)
     assert second.previous_draw_overlap == 1
+    assert result.summary.sum_min == 21
+    assert result.summary.sum_max == 51
+    assert result.summary.sum_mean == 36
+    assert result.summary.odd_count_distribution[3] == 2
+    assert result.summary.section_totals == (10, 2, 0, 0, 0)
+    assert result.summary.consecutive_draw_count == 2
 
 
 def test_analyze_draws_rejects_empty_or_duplicate_input() -> None:
@@ -59,4 +65,3 @@ def test_analyze_draws_rejects_empty_or_duplicate_input() -> None:
     duplicate = draw(1, (1, 2, 3, 4, 5, 6), 7)
     with pytest.raises(ValueError, match="duplicate"):
         analyze_draws((duplicate, duplicate))
-

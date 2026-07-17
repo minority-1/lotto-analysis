@@ -146,9 +146,45 @@ lotto-analysis analyze
 lotto-analysis analyze --recent 50
 ```
 
+전체 상세 결과를 JSON으로 내보냅니다.
+
+```bash
+lotto-analysis analyze --export
+lotto-analysis analyze --recent 50 --export
+```
+
 출력에는 번호별 일반번호·보너스번호 출현 횟수, 출현 비율, 마지막 출현 회차, 현재 미출현 회차 수와 전체 조합의 평균 합계·홀수·저번호·연속번호 요약이 포함됩니다.
 
 출현 비율은 `해당 번호의 일반번호 출현 횟수 ÷ 분석 회차 수`입니다. 저번호는 `1~22`, 고번호는 `23~45`로 정의하며 구간은 `1~10 / 11~20 / 21~30 / 31~40 / 41~45`를 사용합니다. 이 결과는 과거 데이터의 기술통계이며 미래 당첨 확률이나 예측을 의미하지 않습니다.
+
+### 기간 비교
+
+최근 50회와 그 직전 50회의 번호별 출현률·순위 변화를 비교합니다.
+
+```bash
+lotto-analysis compare 50
+```
+
+전체 기간과 최근 50회를 비교하거나 결과를 내보낼 수 있습니다.
+
+```bash
+lotto-analysis compare 50 --against-all
+lotto-analysis compare 50 --export
+```
+
+기간 길이가 다를 때는 단순 횟수가 아니라 회차당 출현률 차이를 사용합니다. 순위 변화 역시 과거 두 기간의 상대적 위치 차이일 뿐 미래 추세를 의미하지 않습니다.
+
+### 출현 간격 분석
+
+번호별 출현 회차와 회차 번호 간격의 평균·중앙값·최소·최대·최근 간격·표준편차를 계산합니다.
+
+```bash
+lotto-analysis gaps
+lotto-analysis gaps --recent 100
+lotto-analysis gaps --export
+```
+
+JSON 산출물은 기본적으로 `data/analysis/`에 저장됩니다. 출현 간격은 과거 분포를 설명하는 통계이며 다음 출현 시점을 예측하지 않습니다.
 
 ## 환경변수
 
@@ -159,6 +195,7 @@ lotto-analysis analyze --recent 50
 | `LOTTO_DATA_DIR` | `data` |
 | `LOTTO_RAW_DATA_DIR` | `data/raw` |
 | `LOTTO_PROCESSED_DATA_DIR` | `data/processed` |
+| `LOTTO_ANALYSIS_DATA_DIR` | `data/analysis` |
 | `LOTTO_COLLECTION_HISTORY_DIR` | `data/collection_history` |
 | `LOTTO_DATABASE_DIR` | `database` |
 | `LOTTO_LOG_DIR` | `logs` |
