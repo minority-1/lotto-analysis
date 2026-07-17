@@ -430,6 +430,7 @@ streamlit run streamlit_app/app.py
 * `[완료]` 연속번호 포함 638회(51.8%) 표시 확인
 * `[완료]` 7×7 행렬과 대각선 표 렌더링 확인
 * `[완료]` AC 값과 합계 구간 차트 렌더링 확인
+* `[완료]` 문서의 `streamlit run streamlit_app/app.py` 실행 시 화면 모듈 import 확인
 * `[사용자 확인]` 전체·최근 20·30·50·100회 범위 전환 시 화면 갱신
 
 종료는 Streamlit을 실행한 터미널에서 `Ctrl+C`를 누른다. 화면은 현재 읽기 전용이다.
@@ -461,3 +462,4 @@ streamlit run streamlit_app/app.py
 * 2026-07-17: 전략·조합 수·seed 반복 백테스트와 비교 요약 JSON 추가.
 * 2026-07-17: PostgreSQL 기반 Streamlit 데이터 대시보드와 기본 통계 화면 추가.
 * 2026-07-17: Streamlit 7×7 행렬·AC·합계 구간 패턴 분석 화면 추가.
+* 2026-07-17: 실제 Streamlit 실행 시 화면 모듈 import 경로 오류 수정.

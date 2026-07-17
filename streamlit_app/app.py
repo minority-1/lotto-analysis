@@ -6,9 +6,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from lotto_analysis.config import Settings
 from lotto_analysis.database import create_database_engine
 from lotto_analysis.repositories import PostgresDrawRepository
-from streamlit_app.views.basic_statistics import render_basic_statistics
-from streamlit_app.views.dashboard import render_dashboard
-from streamlit_app.views.pattern_analysis import render_pattern_analysis
+from lotto_analysis.ui.basic_statistics import render_basic_statistics
+from lotto_analysis.ui.dashboard import render_dashboard
+from lotto_analysis.ui.pattern_analysis import render_pattern_analysis
 
 
 st.set_page_config(page_title="Lotto Analysis", page_icon="🎱", layout="wide")

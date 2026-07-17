@@ -2,7 +2,7 @@ from datetime import date
 
 from lotto_analysis.analysis import analyze_matrix
 from lotto_analysis.models import LottoDraw
-from streamlit_app.views.pattern_analysis import matrix_count_rows
+from lotto_analysis.ui.pattern_analysis import matrix_count_rows
 
 
 def test_matrix_count_rows_formats_valid_and_empty_cells() -> None:
