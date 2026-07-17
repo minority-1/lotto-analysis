@@ -208,6 +208,23 @@ lotto-analysis db-verify
 
 새 회차 수집 후에는 `process`로 CSV를 갱신하고 `db-import`, `db-verify`를 차례로 실행한다.
 
+## 번호 관계 분석 확인
+
+```bash
+lotto-analysis relationships --top 5
+lotto-analysis relationships --recent 100 --number 7 --top 5 --export
+```
+
+확인 항목:
+
+* `[완료]` PostgreSQL 전체 1232회차의 번호쌍·3개 조합 분석 실행
+* `[완료]` 최근 100회 범위가 `1133-1232`로 표시되는지 확인
+* `[완료]` 번호 7의 출현 15회와 동반 번호 결과 출력 확인
+* `[완료]` `data/analysis/relationship_analysis_recent_100_number_7.json` 생성 확인
+* `[대기]` 사용자가 관심 있는 번호와 기간으로 결과를 직접 확인
+
+표시되는 빈도와 비율은 과거 데이터의 동시 출현 기록이며 추천이나 미래 당첨 확률이 아니다.
+
 ## 변경 이력
 
 * 2026-07-15: 최초 작성. 전체 원본 수집 완료 상태와 정기 운영 명령 기록.
@@ -221,3 +238,4 @@ lotto-analysis db-verify
 * 2026-07-17: 분석 요약 JSON, 기간 비교와 출현 간격 분석 및 DB 전 확인 명령 추가.
 * 2026-07-17: Docker 기반 PostgreSQL 개발 환경과 사용자 확인 명령 추가.
 * 2026-07-17: PostgreSQL 스키마·Repository, CSV 이관과 동등성 검증 결과 추가.
+* 2026-07-17: PostgreSQL 기반 번호쌍·3개 조합·특정 번호 동반 출현 분석 추가.

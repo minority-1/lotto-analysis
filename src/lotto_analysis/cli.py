@@ -17,6 +17,7 @@ from lotto_analysis.models import (
     CollectionSummary,
     GapAnalysisResult,
     PeriodComparisonResult,
+    RelationshipAnalysisResult,
 )
 from lotto_analysis.repositories import CsvDrawRepository, PostgresDrawRepository
 from lotto_analysis.services import (
@@ -86,6 +87,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     gaps_parser.add_argument("--recent", type=_positive_int, default=0)
     gaps_parser.add_argument("--export", action="store_true")
+    relationships_parser = subparsers.add_parser(
+        "relationships", help="analyze pair, triple, and companion frequencies"
+    )
+    relationships_parser.add_argument("--recent", type=_positive_int, default=0)
+    relationships_parser.add_argument("--number", type=_lotto_number)
+    relationships_parser.add_argument("--top", type=_positive_int, default=20)
+    relationships_parser.add_argument("--export", action="store_true")
     subparsers.add_parser("db-upgrade", help="upgrade PostgreSQL schema")
     subparsers.add_parser("db-import", help="upsert processed CSV into PostgreSQL")
     subparsers.add_parser(
@@ -119,6 +127,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             )
         if args.command == "gaps":
             return _run_gaps(settings, args.recent, args.export)
+        if args.command == "relationships":
+            return _run_relationships(
+                settings, args.recent, args.number, args.top, args.export
+            )
         if args.command == "db-upgrade":
             upgrade_database(settings.project_root)
             print("Database schema upgraded to head")
@@ -235,6 +247,35 @@ def _run_gaps(settings: Settings, recent: int, export: bool) -> int:
         suffix = "recent_{0}".format(recent) if recent else "all"
         path = write_analysis_json(
             settings.analysis_data_dir / "gap_analysis_{0}.json".format(suffix),
+            result,
+        )
+        print("Export: {0}".format(path))
+    return 0
+
+
+def _run_relationships(
+    settings: Settings,
+    recent: int,
+    anchor_number: Optional[int],
+    top: int,
+    export: bool,
+) -> int:
+    """Analyze PostgreSQL relationship data and optionally export it."""
+    engine = create_database_engine(settings)
+    try:
+        result = AnalysisService(PostgresDrawRepository(engine)).relationships(
+            recent=recent, anchor_number=anchor_number
+        )
+    finally:
+        engine.dispose()
+    _print_relationships(result, top)
+    if export:
+        suffix = "recent_{0}".format(recent) if recent else "all"
+        if anchor_number is not None:
+            suffix += "_number_{0}".format(anchor_number)
+        path = write_analysis_json(
+            settings.analysis_data_dir
+            / "relationship_analysis_{0}.json".format(suffix),
             result,
         )
         print("Export: {0}".format(path))
@@ -383,6 +424,41 @@ def _print_gaps(result: GapAnalysisResult) -> None:
         )
 
 
+def _print_relationships(result: RelationshipAnalysisResult, top: int) -> None:
+    """Print the most frequent historical pairs, triples, and companions."""
+    print(
+        "Relationship analysis for {0} draws ({1}-{2})".format(
+            result.total_draws, result.start_draw, result.end_draw
+        )
+    )
+    print("Top pairs: Numbers  Count  Draw rate")
+    for item in result.pairs[:top]:
+        print(
+            "{0!s:>12}  {1:>5}  {2:>9.2%}".format(
+                item.numbers, item.count, item.draw_rate
+            )
+        )
+    print("Top triples: Numbers  Count  Draw rate")
+    for item in result.triples[:top]:
+        print(
+            "{0!s:>12}  {1:>5}  {2:>9.2%}".format(
+                item.numbers, item.count, item.draw_rate
+            )
+        )
+    if result.anchor_number is not None:
+        print(
+            "Companions for {0} ({1} anchor appearances): Number  Count  Rate".format(
+                result.anchor_number, result.anchor_appearance_count
+            )
+        )
+        for item in result.companions[:top]:
+            print(
+                "{0:>6}  {1:>5}  {2:>9.2%}".format(
+                    item.number, item.count, item.conditional_rate
+                )
+            )
+
+
 def _format_optional(value: object) -> str:
     """Format an optional numeric statistic for compact CLI output."""
     if value is None:
@@ -397,6 +473,14 @@ def _positive_int(value: str) -> int:
     parsed = int(value)
     if parsed <= 0:
         raise argparse.ArgumentTypeError("value must be positive")
+    return parsed
+
+
+def _lotto_number(value: str) -> int:
+    """Parse one Lotto number from 1 through 45."""
+    parsed = int(value)
+    if not 1 <= parsed <= 45:
+        raise argparse.ArgumentTypeError("value must be from 1 through 45")
     return parsed
 
 

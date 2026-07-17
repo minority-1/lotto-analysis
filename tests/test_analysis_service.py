@@ -44,3 +44,13 @@ def test_analysis_service_requires_two_complete_comparison_periods() -> None:
         assert "two complete periods" in str(exc)
     else:
         raise AssertionError("comparison should require two periods")
+
+
+def test_analysis_service_passes_relationship_options_to_repository() -> None:
+    repository = StubRepository()
+
+    result = AnalysisService(repository).relationships(recent=100, anchor_number=1)
+
+    assert repository.requested_recent == 100
+    assert result.anchor_number == 1
+    assert result.anchor_appearance_count == 1

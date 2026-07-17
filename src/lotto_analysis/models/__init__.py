@@ -14,10 +14,17 @@ from lotto_analysis.models.analysis import (
     PeriodComparisonResult,
 )
 from lotto_analysis.models.processing import ProcessingSummary, ValidationIssue
+from lotto_analysis.models.relationship import (
+    CombinationFrequency,
+    CompanionFrequency,
+    RelationshipAnalysisResult,
+)
 
 __all__ = [
     "CollectionFailure",
     "CollectionSummary",
+    "CombinationFrequency",
+    "CompanionFrequency",
     "AnalysisSummary",
     "BasicAnalysisResult",
     "DrawStatistics",
@@ -30,5 +37,6 @@ __all__ = [
     "NumberGapStatistics",
     "PeriodComparisonResult",
     "ProcessingSummary",
+    "RelationshipAnalysisResult",
     "ValidationIssue",
 ]

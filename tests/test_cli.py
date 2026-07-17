@@ -89,3 +89,14 @@ def test_parser_accepts_database_commands() -> None:
     assert parser.parse_args(["db-upgrade"]).command == "db-upgrade"
     assert parser.parse_args(["db-import"]).command == "db-import"
     assert parser.parse_args(["db-verify"]).command == "db-verify"
+
+
+def test_parser_accepts_relationship_command() -> None:
+    args = cli.build_parser().parse_args(
+        ["relationships", "--recent", "100", "--number", "7", "--top", "10", "--export"]
+    )
+
+    assert args.recent == 100
+    assert args.number == 7
+    assert args.top == 10
+    assert args.export is True

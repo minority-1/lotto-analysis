@@ -1,11 +1,19 @@
 """Application service for descriptive Lotto analysis."""
 
-from lotto_analysis.analysis import analyze_draws, analyze_gaps, compare_periods
+from typing import Optional
+
+from lotto_analysis.analysis import (
+    analyze_draws,
+    analyze_gaps,
+    analyze_relationships,
+    compare_periods,
+)
 from lotto_analysis.models.analysis import (
     BasicAnalysisResult,
     GapAnalysisResult,
     PeriodComparisonResult,
 )
+from lotto_analysis.models.relationship import RelationshipAnalysisResult
 from lotto_analysis.repositories import DrawRepository
 
 
@@ -47,3 +55,11 @@ class AnalysisService:
     def gaps(self, recent: int = 0) -> GapAnalysisResult:
         """Calculate appearance-gap statistics for all or recent draws."""
         return analyze_gaps(self._repository.list_draws(recent=recent))
+
+    def relationships(
+        self, recent: int = 0, anchor_number: Optional[int] = None
+    ) -> RelationshipAnalysisResult:
+        """Calculate pair, triple, and optional companion frequencies."""
+        return analyze_relationships(
+            self._repository.list_draws(recent=recent), anchor_number=anchor_number
+        )

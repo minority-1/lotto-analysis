@@ -6,7 +6,7 @@
 
 단계별 품질 검토와 남은 개선 사항은 [코드 리뷰 기록](docs/reviews/README.md)에서 확인할 수 있습니다.
 
-현재는 공식 데이터 수집과 원본 검증, 정제 CSV 생성을 제공합니다.
+현재는 공식 데이터 수집과 원본 검증, PostgreSQL 저장 및 기술통계 분석을 제공합니다.
 
 - 설정 및 경로 관리
 - 로또 회차 데이터 모델
@@ -23,6 +23,7 @@
 - 원본 전체 유효성 검사와 오류 분리
 - 정제 CSV와 JSON 검증 보고서 생성
 - CSV Repository와 기본 기술통계 분석
+- PostgreSQL 기반 번호쌍·3개 조합·동반 출현 분석
 
 SQLite는 제외했으며 PostgreSQL 17을 Docker Compose로 실행합니다. PostgreSQL 스키마·Repository와 CSV 동기화·검증 기능까지 구현했으며, 고급 분석과 Streamlit 화면은 아직 구현하지 않았습니다.
 
@@ -185,6 +186,24 @@ lotto-analysis gaps --export
 ```
 
 JSON 산출물은 기본적으로 `data/analysis/`에 저장됩니다. 출현 간격은 과거 분포를 설명하는 통계이며 다음 출현 시점을 예측하지 않습니다.
+
+### 번호 관계 분석
+
+PostgreSQL에 저장된 회차를 대상으로 번호쌍과 3개 조합의 동시 출현 횟수를 계산합니다. 기본 출력은 각각 상위 20개입니다.
+
+```bash
+lotto-analysis relationships
+lotto-analysis relationships --recent 100 --top 10
+```
+
+특정 번호가 나온 회차에서 함께 나온 번호와 조건부 비율을 확인하고 전체 결과를 JSON으로 저장할 수 있습니다.
+
+```bash
+lotto-analysis relationships --number 7
+lotto-analysis relationships --recent 100 --number 7 --export
+```
+
+`Draw rate`는 분석 회차 중 해당 조합이 등장한 회차 비율이며, 특정 번호의 동반 `Rate`는 그 번호가 나온 회차 중 상대 번호도 함께 나온 비율입니다. 실제 등장한 조합만 집계하며 횟수 내림차순, 번호 오름차순으로 정렬합니다. 모두 과거 동시 출현 기록이며 미래 당첨 확률이나 번호 간 인과관계를 의미하지 않습니다.
 
 ## 환경변수
 
