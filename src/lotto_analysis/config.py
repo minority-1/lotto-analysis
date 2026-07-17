@@ -4,6 +4,9 @@ from dataclasses import dataclass
 import os
 from pathlib import Path
 from typing import Mapping, Optional
+from urllib.parse import quote
+
+from dotenv import load_dotenv
 
 
 def _resolve_path(value: str, project_root: Path) -> Path:
@@ -36,6 +39,11 @@ class Settings:
     request_max_retries: int = 3
     request_retry_backoff_seconds: float = 0.5
     user_agent: str = "lotto-analysis/0.1"
+    postgres_host: str = "127.0.0.1"
+    postgres_port: int = 5432
+    postgres_database: str = "lotto_analysis"
+    postgres_user: str = "lotto_app"
+    postgres_password: str = ""
 
     @classmethod
     def from_env(
@@ -44,13 +52,24 @@ class Settings:
         project_root: Optional[Path] = None,
     ) -> "Settings":
         """Build settings from environment variables and safe defaults."""
-        env = os.environ if environ is None else environ
         root = (
             Path(project_root).expanduser().resolve()
             if project_root is not None
             else Path(__file__).resolve().parents[2]
         )
+        if environ is None:
+            load_dotenv(root / ".env")
+            env = os.environ
+        else:
+            env = environ
         data_dir = _resolve_path(env.get("LOTTO_DATA_DIR", "data"), root)
+
+        try:
+            postgres_port = int(env.get("POSTGRES_PORT", "5432"))
+        except ValueError as exc:
+            raise ValueError("POSTGRES_PORT must be an integer") from exc
+        if not 1 <= postgres_port <= 65535:
+            raise ValueError("POSTGRES_PORT must be between 1 and 65535")
 
         try:
             request_timeout_seconds = float(
@@ -143,6 +162,22 @@ class Settings:
             request_max_retries=request_max_retries,
             request_retry_backoff_seconds=request_retry_backoff_seconds,
             user_agent=env.get("LOTTO_USER_AGENT", "lotto-analysis/0.1"),
+            postgres_host=env.get("POSTGRES_HOST", "127.0.0.1"),
+            postgres_port=postgres_port,
+            postgres_database=env.get("POSTGRES_DB", "lotto_analysis"),
+            postgres_user=env.get("POSTGRES_USER", "lotto_app"),
+            postgres_password=env.get("POSTGRES_PASSWORD", ""),
+        )
+
+    @property
+    def database_url(self) -> str:
+        """Return a psycopg SQLAlchemy URL with escaped credentials."""
+        return "postgresql+psycopg://{0}:{1}@{2}:{3}/{4}".format(
+            quote(self.postgres_user, safe=""),
+            quote(self.postgres_password, safe=""),
+            self.postgres_host,
+            self.postgres_port,
+            quote(self.postgres_database, safe=""),
         )
 
     def ensure_directories(self) -> None:

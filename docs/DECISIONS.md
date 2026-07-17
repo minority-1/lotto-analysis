@@ -109,3 +109,14 @@
 * DB 파일은 Compose 명명 볼륨에 보존하여 컨테이너를 다시 만들어도 유지한다.
 * DB 이름, 사용자, 비밀번호와 호스트 포트는 `.env`에서 읽고 실제 `.env`는 Git에 포함하지 않는다.
 * Compose 설정과 컨테이너 검증을 먼저 마친 뒤 SQLAlchemy, psycopg, Alembic과 Repository를 별도 작업으로 도입한다.
+
+## 2026-07-17: PostgreSQL 스키마와 Repository
+
+* PostgreSQL 연결과 ORM은 SQLAlchemy 2.x, 드라이버는 psycopg 3.x를 사용한다.
+* 스키마 버전은 Alembic 마이그레이션으로 관리하며 애플리케이션 시작 시 암묵적으로 테이블을 생성하지 않는다.
+* 정규화된 회차 데이터는 `lotto_draws` 한 테이블에 저장하고 회차 번호를 유일 키로 유지한다.
+* 번호 범위·정렬·중복, 보너스 번호 중복과 음수 금액은 데이터베이스 제약조건으로도 방어한다.
+* `PostgresDrawRepository`는 기존 `DrawRepository`를 구현하여 분석 엔진이 저장 방식에 종속되지 않게 한다.
+* 최초 이관은 검증된 CSV 전체를 회차 번호 기준 upsert하고, 재실행해도 중복 행이 생기지 않게 한다.
+* 이관 후 CSV와 PostgreSQL의 정규화 데이터 및 기본 분석 결과를 함께 비교한다.
+* DB GUI는 무료 오픈소스와 다중 DB 지원을 우선해 DBeaver Community를 권장하되 필수 개발 의존성으로 두지 않는다.

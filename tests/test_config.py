@@ -37,6 +37,11 @@ def test_settings_honor_path_overrides(tmp_path: Path) -> None:
             "LOTTO_LOG_FILE": "custom.log",
             "LOTTO_LOG_MAX_BYTES": "1024",
             "LOTTO_LOG_BACKUP_COUNT": "2",
+            "POSTGRES_HOST": "db.test",
+            "POSTGRES_PORT": "5544",
+            "POSTGRES_DB": "lotto db",
+            "POSTGRES_USER": "lotto user",
+            "POSTGRES_PASSWORD": "p@ss word",
         },
         project_root=tmp_path,
     )
@@ -55,6 +60,17 @@ def test_settings_honor_path_overrides(tmp_path: Path) -> None:
     assert settings.log_file == (tmp_path / "custom.log").resolve()
     assert settings.log_max_bytes == 1024
     assert settings.log_backup_count == 2
+    assert settings.postgres_host == "db.test"
+    assert settings.postgres_port == 5544
+    assert settings.database_url == (
+        "postgresql+psycopg://lotto%20user:p%40ss%20word@db.test:5544/lotto%20db"
+    )
+
+
+@pytest.mark.parametrize("port", ["invalid", "0", "65536"])
+def test_settings_reject_invalid_postgres_port(tmp_path: Path, port: str) -> None:
+    with pytest.raises(ValueError, match="POSTGRES_PORT"):
+        Settings.from_env(environ={"POSTGRES_PORT": port}, project_root=tmp_path)
 
 
 @pytest.mark.parametrize("timeout", ["invalid", "0", "-1"])

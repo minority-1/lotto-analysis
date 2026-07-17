@@ -2,6 +2,7 @@
 
 from lotto_analysis.models.collection import CollectionFailure, CollectionSummary
 from lotto_analysis.models.draw import LottoDraw
+from lotto_analysis.models.database import DatabaseImportResult, DatabaseVerificationResult
 from lotto_analysis.models.analysis import (
     AnalysisSummary,
     BasicAnalysisResult,
@@ -20,6 +21,8 @@ __all__ = [
     "AnalysisSummary",
     "BasicAnalysisResult",
     "DrawStatistics",
+    "DatabaseImportResult",
+    "DatabaseVerificationResult",
     "GapAnalysisResult",
     "LottoDraw",
     "NumberStatistics",

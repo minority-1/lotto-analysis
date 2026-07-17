@@ -81,3 +81,11 @@ def test_parser_accepts_comparison_and_gap_commands() -> None:
     assert comparison.against_all is True
     assert comparison.export is True
     assert gaps.recent == 100
+
+
+def test_parser_accepts_database_commands() -> None:
+    parser = cli.build_parser()
+
+    assert parser.parse_args(["db-upgrade"]).command == "db-upgrade"
+    assert parser.parse_args(["db-import"]).command == "db-import"
+    assert parser.parse_args(["db-verify"]).command == "db-verify"

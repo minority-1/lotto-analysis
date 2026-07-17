@@ -6,6 +6,5 @@ __pycache__/
 .env
 
 data/
-database/
+/database/
 logs/
-

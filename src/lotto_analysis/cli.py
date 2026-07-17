@@ -5,8 +5,12 @@ from datetime import datetime, timezone
 from statistics import mean
 from typing import Optional, Sequence
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from lotto_analysis.collectors import CollectorError, DhlotteryDrawCollector
 from lotto_analysis.config import Settings
+from lotto_analysis.database import create_database_engine
+from lotto_analysis.database.migrations import upgrade_database
 from lotto_analysis.logging_config import configure_logging
 from lotto_analysis.models import (
     BasicAnalysisResult,
@@ -14,8 +18,13 @@ from lotto_analysis.models import (
     GapAnalysisResult,
     PeriodComparisonResult,
 )
-from lotto_analysis.repositories import CsvDrawRepository
-from lotto_analysis.services import AnalysisService, CollectionService, ProcessingService
+from lotto_analysis.repositories import CsvDrawRepository, PostgresDrawRepository
+from lotto_analysis.services import (
+    AnalysisService,
+    CollectionService,
+    DatabaseService,
+    ProcessingService,
+)
 from lotto_analysis.storage import CollectionHistoryStore, RawJsonStore
 from lotto_analysis.storage.analysis_json import write_analysis_json
 
@@ -77,6 +86,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     gaps_parser.add_argument("--recent", type=_positive_int, default=0)
     gaps_parser.add_argument("--export", action="store_true")
+    subparsers.add_parser("db-upgrade", help="upgrade PostgreSQL schema")
+    subparsers.add_parser("db-import", help="upsert processed CSV into PostgreSQL")
+    subparsers.add_parser(
+        "db-verify", help="compare CSV and PostgreSQL data and analysis"
+    )
     return parser
 
 
@@ -105,6 +119,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             )
         if args.command == "gaps":
             return _run_gaps(settings, args.recent, args.export)
+        if args.command == "db-upgrade":
+            upgrade_database(settings.project_root)
+            print("Database schema upgraded to head")
+            return 0
+        if args.command == "db-import":
+            return _run_database_import(settings)
+        if args.command == "db-verify":
+            return _run_database_verification(settings)
         raw_store = RawJsonStore(settings.raw_data_dir)
         collector = DhlotteryDrawCollector(
             settings=settings,
@@ -117,7 +139,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             progress=_print_progress,
         )
         summary = _execute_command(args, service)
-    except (CollectorError, OSError, ValueError) as exc:
+    except (CollectorError, OSError, SQLAlchemyError, ValueError) as exc:
         print("Command failed: {0}".format(exc))
         _save_failure_history(history_store, command, started_at, exc)
         return 1
@@ -217,6 +239,42 @@ def _run_gaps(settings: Settings, recent: int, export: bool) -> int:
         )
         print("Export: {0}".format(path))
     return 0
+
+
+def _database_service(settings: Settings) -> DatabaseService:
+    """Build the CSV/PostgreSQL synchronization service."""
+    engine = create_database_engine(settings)
+    return DatabaseService(
+        CsvDrawRepository(settings.processed_data_dir / "lotto_draws.csv"),
+        PostgresDrawRepository(engine),
+    )
+
+
+def _run_database_import(settings: Settings) -> int:
+    """Synchronize the processed CSV with PostgreSQL."""
+    result = _database_service(settings).import_draws()
+    print(
+        "Database import: {0} source; {1} synchronized; {2} stored".format(
+            result.source_count,
+            result.synchronized_count,
+            result.database_count,
+        )
+    )
+    return 0 if result.source_count == result.database_count else 1
+
+
+def _run_database_verification(settings: Settings) -> int:
+    """Verify PostgreSQL data and basic analysis against the CSV source."""
+    result = _database_service(settings).verify()
+    print(
+        "Database verification: CSV {0}; PostgreSQL {1}; data {2}; analysis {3}".format(
+            result.csv_count,
+            result.database_count,
+            "match" if result.draw_data_matches else "differ",
+            "match" if result.basic_analysis_matches else "differ",
+        )
+    )
+    return 0 if result.matches else 1
 
 
 def _print_analysis(result: BasicAnalysisResult) -> None:

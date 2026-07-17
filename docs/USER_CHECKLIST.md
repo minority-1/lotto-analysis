@@ -188,6 +188,26 @@ docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -
 
 이 단계의 구체적인 생성·수정 파일은 구현 전에 별도로 설명한다.
 
+## PostgreSQL 데이터 이관 확인
+
+```bash
+lotto-analysis db-upgrade
+lotto-analysis db-import
+lotto-analysis db-verify
+```
+
+확인 항목:
+
+* `[완료]` Alembic 최초 마이그레이션 적용
+* `[완료]` 정제 CSV 1232회차를 PostgreSQL에 저장
+* `[완료]` 같은 이관 명령 재실행 후에도 1232건 유지
+* `[완료]` CSV와 PostgreSQL의 전체 데이터 일치 확인
+* `[완료]` 두 Repository의 기본 분석 결과 일치 확인
+* `[완료]` 실제 PostgreSQL Repository 통합 테스트 통과
+* `[선택]` DBeaver Community를 설치하고 `lotto_draws` 테이블을 화면에서 확인
+
+새 회차 수집 후에는 `process`로 CSV를 갱신하고 `db-import`, `db-verify`를 차례로 실행한다.
+
 ## 변경 이력
 
 * 2026-07-15: 최초 작성. 전체 원본 수집 완료 상태와 정기 운영 명령 기록.
@@ -200,3 +220,4 @@ docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -
 * 2026-07-17: CSV Repository와 1차 기본 통계 분석 및 사용자 확인 명령 추가.
 * 2026-07-17: 분석 요약 JSON, 기간 비교와 출현 간격 분석 및 DB 전 확인 명령 추가.
 * 2026-07-17: Docker 기반 PostgreSQL 개발 환경과 사용자 확인 명령 추가.
+* 2026-07-17: PostgreSQL 스키마·Repository, CSV 이관과 동등성 검증 결과 추가.
