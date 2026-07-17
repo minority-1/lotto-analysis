@@ -13,6 +13,7 @@ from lotto_analysis.ui.relationship_analysis import render_relationship_analysis
 from lotto_analysis.ui.generation import render_generation
 from lotto_analysis.ui.period_and_gaps import render_period_and_gaps
 from lotto_analysis.ui.similarity_and_matrix import render_similarity_and_matrix
+from lotto_analysis.ui.backtest import render_backtest
 
 
 st.set_page_config(page_title="Lotto Analysis", page_icon="🎱", layout="wide")
@@ -36,6 +37,7 @@ def main() -> None:
         "번호 생성": render_generation,
         "기간·간격 분석": render_period_and_gaps,
         "유사도·행렬 비교": render_similarity_and_matrix,
+        "백테스트": render_backtest,
     }
     page = st.sidebar.radio("화면", tuple(pages))
     try:

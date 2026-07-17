@@ -14,6 +14,7 @@ from lotto_analysis.ui.pattern_analysis import matrix_count_rows
 from lotto_analysis.ui.period_and_gaps import comparison_rows, gap_rows
 from lotto_analysis.ui.relationship_analysis import combination_rows
 from lotto_analysis.ui.similarity_and_matrix import matrix_difference_rows
+from lotto_analysis.ui.backtest import parse_seed_list
 
 
 def test_matrix_count_rows_formats_valid_and_empty_cells() -> None:
@@ -95,3 +96,11 @@ def test_matrix_difference_rows_formats_signed_rates_and_empty_cells() -> None:
     assert rows[0]["열 1"] == "1 (+0.0%)"
     assert rows[0]["열 2"] == "2 (-100.0%)"
     assert rows[6]["열 4"] == "-"
+
+
+def test_parse_seed_list_requires_unique_integers() -> None:
+    assert parse_seed_list("41, 42,43") == (41, 42, 43)
+    with pytest.raises(ValueError, match="고유"):
+        parse_seed_list("1,1")
+    with pytest.raises(ValueError, match="정수"):
+        parse_seed_list("one")
