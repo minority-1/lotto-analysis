@@ -15,6 +15,7 @@ from lotto_analysis.models.analysis import (
 )
 from lotto_analysis.models.processing import ProcessingSummary, ValidationIssue
 from lotto_analysis.models.relationship import (
+    BonusFollowupStatistics,
     CombinationFrequency,
     CompanionFrequency,
     DistanceFrequency,
@@ -30,6 +31,7 @@ __all__ = [
     "DistanceFrequency",
     "AnalysisSummary",
     "BasicAnalysisResult",
+    "BonusFollowupStatistics",
     "DrawStatistics",
     "DatabaseImportResult",
     "DatabaseVerificationResult",

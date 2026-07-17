@@ -48,6 +48,8 @@ def test_relationship_analysis_counts_and_sorts_combinations() -> None:
     assert result.lag_overlaps[0].compared_draws == 1
     assert result.lag_overlaps[0].overlap_distribution[3] == 1
     assert result.lag_overlaps[0].average_overlap == 3.0
+    assert result.bonus_followups[0].eligible_draws == 1
+    assert result.bonus_followups[0].main_appearances == 0
 
 
 def test_relationship_analysis_returns_no_companions_when_anchor_is_absent() -> None:
@@ -83,6 +85,28 @@ def test_relationship_analysis_uses_exact_draw_numbers_for_lags() -> None:
     assert result.lag_overlaps[0].compared_draws == 0
     assert result.lag_overlaps[1].compared_draws == 1
     assert result.lag_overlaps[1].average_overlap == 1.0
+    assert result.bonus_followups[0].eligible_draws == 0
+    assert result.bonus_followups[1].eligible_draws == 1
+
+
+def test_relationship_analysis_tracks_bonus_as_future_main_number() -> None:
+    first = LottoDraw(
+        draw_number=1,
+        draw_date=date(2026, 7, 1),
+        numbers=(1, 2, 3, 4, 5, 6),
+        bonus_number=7,
+        first_prize_winners=1,
+        first_prize_amount=100,
+        total_sales_amount=1000,
+        collected_at=None,
+    )
+    second = _draw(2, (7, 8, 9, 10, 11, 12))
+
+    result = analyze_relationships((first, second))
+
+    assert result.bonus_followups[0].eligible_draws == 1
+    assert result.bonus_followups[0].main_appearances == 1
+    assert result.bonus_followups[0].appearance_rate == 1.0
 
 
 @pytest.mark.parametrize("anchor", [0, 46, True])

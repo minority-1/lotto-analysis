@@ -482,6 +482,16 @@ def _print_relationships(result: RelationshipAnalysisResult, top: int) -> None:
                 item.overlap_distribution,
             )
         )
+    print("Bonus to future main: Lag  Eligible  Appearances  Rate")
+    for item in result.bonus_followups:
+        print(
+            "{0:>3}  {1:>8}  {2:>11}  {3:>7.2%}".format(
+                item.lag,
+                item.eligible_draws,
+                item.main_appearances,
+                item.appearance_rate,
+            )
+        )
     if result.anchor_number is not None:
         print(
             "Companions for {0} ({1} anchor appearances): Number  Count  Rate".format(

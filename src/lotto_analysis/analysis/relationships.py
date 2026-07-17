@@ -6,6 +6,7 @@ from typing import Iterable, Optional, Tuple
 
 from lotto_analysis.models.draw import LottoDraw
 from lotto_analysis.models.relationship import (
+    BonusFollowupStatistics,
     CombinationFrequency,
     CompanionFrequency,
     DistanceFrequency,
@@ -78,6 +79,7 @@ def analyze_relationships(
             consecutive_group_counts, total_draws
         ),
         lag_overlaps=_lag_overlap_statistics(ordered_draws),
+        bonus_followups=_bonus_followup_statistics(ordered_draws),
     )
 
 
@@ -143,6 +145,30 @@ def _lag_overlap_statistics(
                 compared_draws=len(overlaps),
                 overlap_distribution=distribution,  # type: ignore[arg-type]
                 average_overlap=sum(overlaps) / len(overlaps) if overlaps else 0.0,
+            )
+        )
+    return tuple(results)
+
+
+def _bonus_followup_statistics(
+    draws: Tuple[LottoDraw, ...]
+) -> Tuple[BonusFollowupStatistics, ...]:
+    draws_by_number = {draw.draw_number: draw for draw in draws}
+    results = []
+    for lag in (1, 2, 3):
+        eligible = 0
+        appearances = 0
+        for draw in draws:
+            following = draws_by_number.get(draw.draw_number + lag)
+            if following is not None:
+                eligible += 1
+                appearances += draw.bonus_number in following.numbers
+        results.append(
+            BonusFollowupStatistics(
+                lag=lag,
+                eligible_draws=eligible,
+                main_appearances=appearances,
+                appearance_rate=appearances / eligible if eligible else 0.0,
             )
         )
     return tuple(results)

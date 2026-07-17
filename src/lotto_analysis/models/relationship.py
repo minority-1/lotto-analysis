@@ -42,6 +42,16 @@ class LagOverlapStatistics:
 
 
 @dataclass(frozen=True)
+class BonusFollowupStatistics:
+    """Describe bonus-number appearances as a main number after a draw lag."""
+
+    lag: int
+    eligible_draws: int
+    main_appearances: int
+    appearance_rate: float
+
+
+@dataclass(frozen=True)
 class RelationshipAnalysisResult:
     """Contain pair, triple, and optional anchor-number relationships."""
 
@@ -62,3 +72,4 @@ class RelationshipAnalysisResult:
     same_last_digit_draw_rate: float
     consecutive_groups: Tuple[CombinationFrequency, ...]
     lag_overlaps: Tuple[LagOverlapStatistics, ...]
+    bonus_followups: Tuple[BonusFollowupStatistics, ...]
