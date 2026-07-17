@@ -83,3 +83,12 @@ def test_analysis_service_passes_pattern_range_to_repository() -> None:
 
     assert repository.requested_recent == 20
     assert result.total_draws == 1
+
+
+def test_analysis_service_passes_similarity_range_to_repository() -> None:
+    repository = StubRepository()
+
+    result = AnalysisService(repository).similarity(recent=200)
+
+    assert repository.requested_recent == 200
+    assert result.total_draws == 1

@@ -8,6 +8,7 @@ from lotto_analysis.analysis import (
     analyze_matrix,
     analyze_patterns,
     analyze_relationships,
+    analyze_similarity,
     compare_matrices,
     compare_periods,
 )
@@ -19,6 +20,7 @@ from lotto_analysis.models.analysis import (
 from lotto_analysis.models.matrix import MatrixAnalysisResult, MatrixComparisonResult
 from lotto_analysis.models.pattern import PatternAnalysisResult
 from lotto_analysis.models.relationship import RelationshipAnalysisResult
+from lotto_analysis.models.similarity import SimilarityAnalysisResult
 from lotto_analysis.repositories import DrawRepository
 
 
@@ -85,3 +87,7 @@ class AnalysisService:
     def patterns(self, recent: int = 0) -> PatternAnalysisResult:
         """Calculate mathematical combination patterns for a draw range."""
         return analyze_patterns(self._repository.list_draws(recent=recent))
+
+    def similarity(self, recent: int = 0) -> SimilarityAnalysisResult:
+        """Compare winning combinations within all or recent selected draws."""
+        return analyze_similarity(self._repository.list_draws(recent=recent))

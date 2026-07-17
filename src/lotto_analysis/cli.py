@@ -21,6 +21,7 @@ from lotto_analysis.models import (
     PatternAnalysisResult,
     PeriodComparisonResult,
     RelationshipAnalysisResult,
+    SimilarityAnalysisResult,
 )
 from lotto_analysis.repositories import CsvDrawRepository, PostgresDrawRepository
 from lotto_analysis.services import (
@@ -112,6 +113,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     patterns_parser.add_argument("--recent", type=_positive_int, default=0)
     patterns_parser.add_argument("--export", action="store_true")
+    similarity_parser = subparsers.add_parser(
+        "similarity", help="compare historical winning combinations"
+    )
+    similarity_parser.add_argument("--recent", type=_positive_int, default=0)
+    similarity_parser.add_argument("--top", type=_positive_int, default=20)
+    similarity_parser.add_argument("--export", action="store_true")
     subparsers.add_parser("db-upgrade", help="upgrade PostgreSQL schema")
     subparsers.add_parser("db-import", help="upsert processed CSV into PostgreSQL")
     subparsers.add_parser(
@@ -155,6 +162,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             return _run_matrix_comparison(settings, args.recent, args.export)
         if args.command == "patterns":
             return _run_patterns(settings, args.recent, args.export)
+        if args.command == "similarity":
+            return _run_similarity(settings, args.recent, args.top, args.export)
         if args.command == "db-upgrade":
             upgrade_database(settings.project_root)
             print("Database schema upgraded to head")
@@ -356,6 +365,29 @@ def _run_patterns(settings: Settings, recent: int, export: bool) -> int:
         suffix = "recent_{0}".format(recent) if recent else "all"
         path = write_analysis_json(
             settings.analysis_data_dir / "pattern_analysis_{0}.json".format(suffix),
+            result,
+        )
+        print("Export: {0}".format(path))
+    return 0
+
+
+def _run_similarity(
+    settings: Settings, recent: int, top: int, export: bool
+) -> int:
+    """Analyze historical combination similarity from PostgreSQL."""
+    engine = create_database_engine(settings)
+    try:
+        result = AnalysisService(PostgresDrawRepository(engine)).similarity(
+            recent=recent
+        )
+    finally:
+        engine.dispose()
+    _print_similarity(result, top)
+    if export:
+        suffix = "recent_{0}".format(recent) if recent else "all"
+        path = write_analysis_json(
+            settings.analysis_data_dir
+            / "similarity_analysis_{0}.json".format(suffix),
             result,
         )
         print("Export: {0}".format(path))
@@ -690,6 +722,34 @@ def _print_patterns(result: PatternAnalysisResult) -> None:
             result.last_digit_sum_mean,
         )
     )
+
+
+def _print_similarity(result: SimilarityAnalysisResult, top: int) -> None:
+    """Print aggregate overlap counts and recent draw-level maxima."""
+    print(
+        "Similarity analysis for {0} draws ({1}-{2}); {3} pairs".format(
+            result.total_draws,
+            result.start_draw,
+            result.end_draw,
+            result.pair_comparisons,
+        )
+    )
+    print(
+        "Overlap distribution 0-6: {0}".format(result.overlap_distribution)
+    )
+    print("Latest draws: Draw  Compared  Max overlap  Jaccard  Most similar")
+    for item in result.draws[-top:]:
+        print(
+            "{0:>4}  {1:>8}  {2:>11}  {3:>7}  {4}".format(
+                item.draw_number,
+                item.compared_draws,
+                item.maximum_overlap,
+                "-"
+                if item.maximum_jaccard is None
+                else "{0:.2%}".format(item.maximum_jaccard),
+                item.most_similar_draws,
+            )
+        )
 
 
 def _frequency_text(items: Sequence[object]) -> str:

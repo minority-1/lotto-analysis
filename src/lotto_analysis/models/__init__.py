@@ -35,6 +35,10 @@ from lotto_analysis.models.relationship import (
     LagOverlapStatistics,
     RelationshipAnalysisResult,
 )
+from lotto_analysis.models.similarity import (
+    DrawSimilarityStatistics,
+    SimilarityAnalysisResult,
+)
 
 __all__ = [
     "CollectionFailure",
@@ -48,6 +52,7 @@ __all__ = [
     "BonusFollowupStatistics",
     "DrawStatistics",
     "DrawPatternStatistics",
+    "DrawSimilarityStatistics",
     "DatabaseImportResult",
     "DatabaseVerificationResult",
     "GapAnalysisResult",
@@ -64,6 +69,7 @@ __all__ = [
     "PatternAnalysisResult",
     "ProcessingSummary",
     "RelationshipAnalysisResult",
+    "SimilarityAnalysisResult",
     "ValidationIssue",
     "SumBandFrequency",
     "ValueFrequency",

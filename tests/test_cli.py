@@ -124,3 +124,14 @@ def test_parser_accepts_pattern_command() -> None:
     assert args.command == "patterns"
     assert args.recent == 100
     assert args.export is True
+
+
+def test_parser_accepts_similarity_command() -> None:
+    args = cli.build_parser().parse_args(
+        ["similarity", "--recent", "100", "--top", "10", "--export"]
+    )
+
+    assert args.command == "similarity"
+    assert args.recent == 100
+    assert args.top == 10
+    assert args.export is True
