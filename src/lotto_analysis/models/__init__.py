@@ -1,6 +1,11 @@
 """Domain models."""
 
 from lotto_analysis.models.collection import CollectionFailure, CollectionSummary
+from lotto_analysis.models.backtest import (
+    BacktestCombination,
+    BacktestResult,
+    BacktestTargetResult,
+)
 from lotto_analysis.models.draw import LottoDraw
 from lotto_analysis.models.matrix import (
     DiagonalStatistics,
@@ -54,6 +59,9 @@ __all__ = [
     "DiagonalStatistics",
     "AnalysisSummary",
     "BasicAnalysisResult",
+    "BacktestCombination",
+    "BacktestResult",
+    "BacktestTargetResult",
     "BonusFollowupStatistics",
     "DrawStatistics",
     "DrawPatternStatistics",

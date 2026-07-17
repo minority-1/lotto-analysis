@@ -169,3 +169,30 @@ def test_parser_accepts_generation_command() -> None:
     assert args.exclude == (44, 45)
     assert args.odd_min == 2
     assert args.odd_max == 4
+
+
+def test_parser_accepts_backtest_command() -> None:
+    args = cli.build_parser().parse_args(
+        [
+            "backtest",
+            "--strategy",
+            "frequency",
+            "--targets",
+            "10",
+            "--combinations",
+            "5",
+            "--weight-recent",
+            "50",
+            "--seed",
+            "7",
+            "--export",
+        ]
+    )
+
+    assert args.command == "backtest"
+    assert args.strategy == "frequency"
+    assert args.targets == 10
+    assert args.combinations == 5
+    assert args.weight_recent == 50
+    assert args.seed == 7
+    assert args.export is True
