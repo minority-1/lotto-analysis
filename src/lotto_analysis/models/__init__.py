@@ -9,6 +9,7 @@ from lotto_analysis.models.backtest import (
     BacktestTargetResult,
 )
 from lotto_analysis.models.draw import LottoDraw
+from lotto_analysis.models.dashboard import DashboardSummary
 from lotto_analysis.models.matrix import (
     DiagonalStatistics,
     MatrixAnalysisResult,
@@ -72,6 +73,7 @@ __all__ = [
     "DrawSimilarityStatistics",
     "DatabaseImportResult",
     "DatabaseVerificationResult",
+    "DashboardSummary",
     "GapAnalysisResult",
     "GeneratedCombination",
     "GenerationConditions",
