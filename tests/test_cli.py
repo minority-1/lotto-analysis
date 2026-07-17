@@ -116,3 +116,11 @@ def test_parser_accepts_matrix_comparison_command() -> None:
     assert args.command == "matrix-compare"
     assert args.recent == 50
     assert args.export is True
+
+
+def test_parser_accepts_pattern_command() -> None:
+    args = cli.build_parser().parse_args(["patterns", "--recent", "100", "--export"])
+
+    assert args.command == "patterns"
+    assert args.recent == 100
+    assert args.export is True

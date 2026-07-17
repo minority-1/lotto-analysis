@@ -74,3 +74,12 @@ def test_analysis_service_requires_two_complete_matrix_periods() -> None:
         assert "two complete matrix periods" in str(exc)
     else:
         raise AssertionError("matrix comparison should require two periods")
+
+
+def test_analysis_service_passes_pattern_range_to_repository() -> None:
+    repository = StubRepository()
+
+    result = AnalysisService(repository).patterns(recent=20)
+
+    assert repository.requested_recent == 20
+    assert result.total_draws == 1

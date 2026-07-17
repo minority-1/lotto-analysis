@@ -21,6 +21,12 @@ from lotto_analysis.models.analysis import (
     PeriodComparisonResult,
 )
 from lotto_analysis.models.processing import ProcessingSummary, ValidationIssue
+from lotto_analysis.models.pattern import (
+    DrawPatternStatistics,
+    PatternAnalysisResult,
+    SumBandFrequency,
+    ValueFrequency,
+)
 from lotto_analysis.models.relationship import (
     BonusFollowupStatistics,
     CombinationFrequency,
@@ -41,6 +47,7 @@ __all__ = [
     "BasicAnalysisResult",
     "BonusFollowupStatistics",
     "DrawStatistics",
+    "DrawPatternStatistics",
     "DatabaseImportResult",
     "DatabaseVerificationResult",
     "GapAnalysisResult",
@@ -54,7 +61,10 @@ __all__ = [
     "NumberComparison",
     "NumberGapStatistics",
     "PeriodComparisonResult",
+    "PatternAnalysisResult",
     "ProcessingSummary",
     "RelationshipAnalysisResult",
     "ValidationIssue",
+    "SumBandFrequency",
+    "ValueFrequency",
 ]

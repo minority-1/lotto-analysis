@@ -18,6 +18,7 @@ from lotto_analysis.models import (
     GapAnalysisResult,
     MatrixAnalysisResult,
     MatrixComparisonResult,
+    PatternAnalysisResult,
     PeriodComparisonResult,
     RelationshipAnalysisResult,
 )
@@ -106,6 +107,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     matrix_compare_parser.add_argument("recent", type=_positive_int)
     matrix_compare_parser.add_argument("--export", action="store_true")
+    patterns_parser = subparsers.add_parser(
+        "patterns", help="analyze mathematical combination patterns"
+    )
+    patterns_parser.add_argument("--recent", type=_positive_int, default=0)
+    patterns_parser.add_argument("--export", action="store_true")
     subparsers.add_parser("db-upgrade", help="upgrade PostgreSQL schema")
     subparsers.add_parser("db-import", help="upsert processed CSV into PostgreSQL")
     subparsers.add_parser(
@@ -147,6 +153,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             return _run_matrix(settings, args.recent, args.export)
         if args.command == "matrix-compare":
             return _run_matrix_comparison(settings, args.recent, args.export)
+        if args.command == "patterns":
+            return _run_patterns(settings, args.recent, args.export)
         if args.command == "db-upgrade":
             upgrade_database(settings.project_root)
             print("Database schema upgraded to head")
@@ -330,6 +338,24 @@ def _run_matrix_comparison(settings: Settings, recent: int, export: bool) -> int
         path = write_analysis_json(
             settings.analysis_data_dir
             / "matrix_comparison_previous_recent_{0}.json".format(recent),
+            result,
+        )
+        print("Export: {0}".format(path))
+    return 0
+
+
+def _run_patterns(settings: Settings, recent: int, export: bool) -> int:
+    """Analyze mathematical patterns from PostgreSQL draw data."""
+    engine = create_database_engine(settings)
+    try:
+        result = AnalysisService(PostgresDrawRepository(engine)).patterns(recent=recent)
+    finally:
+        engine.dispose()
+    _print_patterns(result)
+    if export:
+        suffix = "recent_{0}".format(recent) if recent else "all"
+        path = write_analysis_json(
+            settings.analysis_data_dir / "pattern_analysis_{0}.json".format(suffix),
             result,
         )
         print("Export: {0}".format(path))
@@ -621,6 +647,57 @@ def _print_matrix_comparison(result: MatrixComparisonResult) -> None:
                 for cell in row_cells
             )
         )
+
+
+def _print_patterns(result: PatternAnalysisResult) -> None:
+    """Print compact mathematical pattern distributions."""
+    print(
+        "Pattern analysis for {0} draws ({1}-{2})".format(
+            result.total_draws, result.start_draw, result.end_draw
+        )
+    )
+    print("AC distribution: {0}".format(_frequency_text(result.ac_distribution)))
+    print(
+        "Adjacent gap distribution: {0}".format(
+            _frequency_text(result.gap_distribution)
+        )
+    )
+    print(
+        "Prime counts: {0}".format(_frequency_text(result.prime_count_distribution))
+    )
+    print(
+        "Composite counts: {0}".format(
+            _frequency_text(result.composite_count_distribution)
+        )
+    )
+    print(
+        "Square counts: {0}".format(
+            _frequency_text(result.square_count_distribution)
+        )
+    )
+    print(
+        "Sum bands: {0}".format(
+            " / ".join(
+                "{0}-{1}:{2}".format(item.minimum, item.maximum, item.count)
+                for item in result.sum_band_distribution
+            )
+        )
+    )
+    print(
+        "Last-digit sum: min {0}; max {1}; mean {2:.2f}".format(
+            result.last_digit_sum_minimum,
+            result.last_digit_sum_maximum,
+            result.last_digit_sum_mean,
+        )
+    )
+
+
+def _frequency_text(items: Sequence[object]) -> str:
+    """Format value/count result objects without coupling to their model type."""
+    return " / ".join(
+        "{0}:{1}".format(getattr(item, "value"), getattr(item, "count"))
+        for item in items
+    )
 
 
 def _format_optional(value: object) -> str:

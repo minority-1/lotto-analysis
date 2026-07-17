@@ -6,6 +6,7 @@ from lotto_analysis.analysis import (
     analyze_draws,
     analyze_gaps,
     analyze_matrix,
+    analyze_patterns,
     analyze_relationships,
     compare_matrices,
     compare_periods,
@@ -16,6 +17,7 @@ from lotto_analysis.models.analysis import (
     PeriodComparisonResult,
 )
 from lotto_analysis.models.matrix import MatrixAnalysisResult, MatrixComparisonResult
+from lotto_analysis.models.pattern import PatternAnalysisResult
 from lotto_analysis.models.relationship import RelationshipAnalysisResult
 from lotto_analysis.repositories import DrawRepository
 
@@ -79,3 +81,7 @@ class AnalysisService:
         if len(draws) < recent * 2:
             raise ValueError("two complete matrix periods are required")
         return compare_matrices(draws[-recent * 2 : -recent], draws[-recent:])
+
+    def patterns(self, recent: int = 0) -> PatternAnalysisResult:
+        """Calculate mathematical combination patterns for a draw range."""
+        return analyze_patterns(self._repository.list_draws(recent=recent))
