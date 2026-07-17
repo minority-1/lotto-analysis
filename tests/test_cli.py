@@ -40,7 +40,7 @@ def test_main_records_logging_initialization_failure(
     exit_code = cli.main(["collect-one", "1"])
 
     assert exit_code == 1
-    assert "Collection failed: log directory unavailable" in capsys.readouterr().out  # type: ignore[attr-defined]
+    assert "Command failed: log directory unavailable" in capsys.readouterr().out  # type: ignore[attr-defined]
     history_paths = list(settings.collection_history_dir.glob("*.json"))
     assert len(history_paths) == 1
     history = json.loads(history_paths[0].read_text(encoding="utf-8"))
@@ -57,8 +57,15 @@ def test_main_reports_settings_failure_without_traceback(
     monkeypatch.setattr(cli.Settings, "from_env", fail_settings)  # type: ignore[attr-defined]
 
     assert cli.main(["collect-one", "1"]) == 1
-    assert "Collection failed: invalid setting" in capsys.readouterr().out  # type: ignore[attr-defined]
+    assert "Command failed: invalid setting" in capsys.readouterr().out  # type: ignore[attr-defined]
 
 
 def test_parser_accepts_process_command() -> None:
     assert cli.build_parser().parse_args(["process"]).command == "process"
+
+
+def test_parser_accepts_recent_analysis_command() -> None:
+    args = cli.build_parser().parse_args(["analyze", "--recent", "50"])
+
+    assert args.command == "analyze"
+    assert args.recent == 50

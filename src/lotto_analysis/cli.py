@@ -2,13 +2,15 @@
 
 import argparse
 from datetime import datetime, timezone
+from statistics import mean
 from typing import Optional, Sequence
 
 from lotto_analysis.collectors import CollectorError, DhlotteryDrawCollector
 from lotto_analysis.config import Settings
 from lotto_analysis.logging_config import configure_logging
-from lotto_analysis.models import CollectionSummary
-from lotto_analysis.services import CollectionService, ProcessingService
+from lotto_analysis.models import BasicAnalysisResult, CollectionSummary
+from lotto_analysis.repositories import CsvDrawRepository
+from lotto_analysis.services import AnalysisService, CollectionService, ProcessingService
 from lotto_analysis.storage import CollectionHistoryStore, RawJsonStore
 
 
@@ -44,11 +46,20 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser(
         "process", help="validate raw draws and create processed CSV"
     )
+    analyze_parser = subparsers.add_parser(
+        "analyze", help="calculate basic descriptive statistics"
+    )
+    analyze_parser.add_argument(
+        "--recent",
+        type=_positive_int,
+        default=0,
+        help="analyze only the latest N draws",
+    )
     return parser
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    """Execute one collection command and return a process exit code."""
+    """Execute one application command and return a process exit code."""
     args = build_parser().parse_args(argv)
     command = _describe_command(args)
     started_at = datetime.now(timezone.utc)
@@ -64,6 +75,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         )
         if args.command == "process":
             return _run_processing(settings)
+        if args.command == "analyze":
+            return _run_analysis(settings, recent=args.recent)
         raw_store = RawJsonStore(settings.raw_data_dir)
         collector = DhlotteryDrawCollector(
             settings=settings,
@@ -77,7 +90,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         )
         summary = _execute_command(args, service)
     except (CollectorError, OSError, ValueError) as exc:
-        print("Collection failed: {0}".format(exc))
+        print("Command failed: {0}".format(exc))
         _save_failure_history(history_store, command, started_at, exc)
         return 1
 
@@ -125,6 +138,75 @@ def _run_processing(settings: Settings) -> int:
     print("CSV: {0}".format(summary.csv_path))
     print("Report: {0}".format(summary.report_path))
     return 1 if summary.issues or summary.missing_draws else 0
+
+
+def _run_analysis(settings: Settings, recent: int) -> int:
+    """Calculate and print first-stage descriptive statistics."""
+    result = AnalysisService(
+        CsvDrawRepository(settings.processed_data_dir / "lotto_draws.csv")
+    ).analyze(recent=recent)
+    _print_analysis(result)
+    return 0
+
+
+def _print_analysis(result: BasicAnalysisResult) -> None:
+    """Print a compact, prediction-neutral analysis report."""
+    draw_stats = result.draw_statistics
+    print(
+        "Analyzed {0} draws ({1}-{2})".format(
+            result.total_draws, result.start_draw, result.end_draw
+        )
+    )
+    print(
+        "Draw summary: average sum {0:.2f}; consecutive {1}/{2}; "
+        "average odd {3:.2f}; average low(1-22) {4:.2f}".format(
+            mean(item.number_sum for item in draw_stats),
+            sum(item.has_consecutive_numbers for item in draw_stats),
+            result.total_draws,
+            mean(item.odd_count for item in draw_stats),
+            mean(item.low_count for item in draw_stats),
+        )
+    )
+    section_averages = tuple(
+        mean(item.section_counts[index] for item in draw_stats)
+        for index in range(5)
+    )
+    overlaps = tuple(
+        item.previous_draw_overlap
+        for item in draw_stats
+        if item.previous_draw_overlap is not None
+    )
+    print(
+        "Sections average (1-10/11-20/21-30/31-40/41-45): "
+        "{0:.2f}/{1:.2f}/{2:.2f}/{3:.2f}/{4:.2f}; previous overlap {5}".format(
+            section_averages[0],
+            section_averages[1],
+            section_averages[2],
+            section_averages[3],
+            section_averages[4],
+            "{0:.2f}".format(mean(overlaps)) if overlaps else "n/a",
+        )
+    )
+    print("Number  Main  Rate     Bonus  Last  Absent")
+    for item in result.number_statistics:
+        print(
+            "{0:>6}  {1:>4}  {2:>7.2%}  {3:>5}  {4:>4}  {5:>6}".format(
+                item.number,
+                item.main_count,
+                item.main_rate,
+                item.bonus_count,
+                item.last_draw_number if item.last_draw_number is not None else "-",
+                item.absence_draws,
+            )
+        )
+
+
+def _positive_int(value: str) -> int:
+    """Parse one strictly positive CLI integer."""
+    parsed = int(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("value must be positive")
+    return parsed
 
 
 def _save_failure_history(
