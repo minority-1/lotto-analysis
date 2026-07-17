@@ -7,6 +7,11 @@ from typing import Optional, Sequence
 
 from sqlalchemy.exc import SQLAlchemyError
 
+from lotto_analysis.cli_commands.backtest import (
+    register_backtest_commands,
+    run_backtest,
+    run_backtest_experiment,
+)
 from lotto_analysis.collectors import CollectorError, DhlotteryDrawCollector
 from lotto_analysis.config import Settings
 from lotto_analysis.database import create_database_engine
@@ -15,7 +20,6 @@ from lotto_analysis.generators import FrequencyWeightedStrategy, build_frequency
 from lotto_analysis.logging_config import configure_logging
 from lotto_analysis.models import (
     BasicAnalysisResult,
-    BacktestResult,
     CollectionSummary,
     GapAnalysisResult,
     GenerationConditions,
@@ -30,7 +34,6 @@ from lotto_analysis.models import (
 from lotto_analysis.repositories import CsvDrawRepository, PostgresDrawRepository
 from lotto_analysis.services import (
     AnalysisService,
-    BacktestService,
     CollectionService,
     DatabaseService,
     GenerationService,
@@ -152,18 +155,7 @@ def build_parser() -> argparse.ArgumentParser:
     generate_parser.add_argument("--max-attempts", type=_positive_int, default=10000)
     generate_parser.add_argument("--allow-exact-historical", action="store_true")
     generate_parser.add_argument("--export", action="store_true")
-    backtest_parser = subparsers.add_parser(
-        "backtest", help="evaluate generation strategies without future leakage"
-    )
-    backtest_parser.add_argument(
-        "--strategy", choices=("uniform", "frequency"), default="uniform"
-    )
-    backtest_parser.add_argument("--targets", type=_positive_int, default=20)
-    backtest_parser.add_argument("--combinations", type=_positive_int, default=5)
-    backtest_parser.add_argument("--seed", type=int, default=42)
-    backtest_parser.add_argument("--weight-recent", type=_positive_int, default=0)
-    backtest_parser.add_argument("--max-attempts", type=_positive_int, default=10000)
-    backtest_parser.add_argument("--export", action="store_true")
+    register_backtest_commands(subparsers)
     subparsers.add_parser("db-upgrade", help="upgrade PostgreSQL schema")
     subparsers.add_parser("db-import", help="upsert processed CSV into PostgreSQL")
     subparsers.add_parser(
@@ -212,7 +204,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         if args.command == "generate":
             return _run_generation(settings, args)
         if args.command == "backtest":
-            return _run_backtest(settings, args)
+            return run_backtest(settings, args)
+        if args.command == "backtest-experiment":
+            return run_backtest_experiment(settings, args)
         if args.command == "db-upgrade":
             upgrade_database(settings.project_root)
             print("Database schema upgraded to head")
@@ -508,42 +502,6 @@ def _run_generation(settings: Settings, args: argparse.Namespace) -> int:
         )
         print("Export: {0}".format(path))
     return 0 if result.complete else 1
-
-
-def _run_backtest(settings: Settings, args: argparse.Namespace) -> int:
-    """Run a leakage-safe historical generation strategy evaluation."""
-    engine = create_database_engine(settings)
-    try:
-        result = BacktestService(PostgresDrawRepository(engine)).run(
-            strategy_name=args.strategy,
-            target_count=args.targets,
-            combinations_per_target=args.combinations,
-            base_seed=args.seed,
-            weight_recent=args.weight_recent,
-            maximum_attempts=args.max_attempts,
-        )
-    finally:
-        engine.dispose()
-    _print_backtest(result)
-    if args.export:
-        scope = (
-            "recent_{0}".format(args.weight_recent)
-            if args.strategy == "frequency" and args.weight_recent
-            else "all"
-        )
-        path = write_analysis_json(
-            settings.analysis_data_dir
-            / "backtest_{0}_{1}_targets_{2}_combinations_{3}_seed_{4}.json".format(
-                args.strategy,
-                scope,
-                args.targets,
-                args.combinations,
-                args.seed,
-            ),
-            result,
-        )
-        print("Export: {0}".format(path))
-    return 0 if result.complete_targets == result.target_count else 1
 
 
 def _database_service(settings: Settings) -> DatabaseService:
@@ -952,43 +910,6 @@ def _print_generation(result: GenerationResult) -> None:
         )
     if result.message is not None:
         print(result.message)
-
-
-def _print_backtest(result: BacktestResult) -> None:
-    """Print aggregate and target-level backtest outcomes."""
-    print(
-        "Backtest strategy {0}; {1} targets; {2} combinations/target; "
-        "seed {3}; weight recent {4}".format(
-            result.strategy,
-            result.target_count,
-            result.combinations_per_target,
-            result.base_seed,
-            result.weight_recent or "all",
-        )
-    )
-    print(
-        "Generated {0}; complete targets {1}/{2}; bonus matches {3}".format(
-            result.total_generated_combinations,
-            result.complete_targets,
-            result.target_count,
-            result.bonus_match_count,
-        )
-    )
-    print("All combination main matches 0-6: {0}".format(result.main_match_distribution))
-    print("Target best matches 0-6: {0}".format(result.best_match_distribution))
-    print("Target  Training       Generated  Best  Seed")
-    for item in result.targets:
-        print(
-            "{0:>6}  {1:>4}-{2:<4}  {3:>4}/{4:<4}  {5:>4}  {6}".format(
-                item.target_draw_number,
-                item.training_start_draw,
-                item.training_end_draw,
-                item.generated_combinations,
-                item.requested_combinations,
-                item.best_main_match,
-                item.seed,
-            )
-        )
 
 
 def _frequency_text(items: Sequence[object]) -> str:

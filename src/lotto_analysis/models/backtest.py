@@ -47,3 +47,32 @@ class BacktestResult:
     best_match_distribution: Tuple[int, int, int, int, int, int, int]
     bonus_match_count: int
     targets: Tuple[BacktestTargetResult, ...]
+
+
+@dataclass(frozen=True)
+class BacktestExperimentSummary:
+    """Aggregate repeated runs for one strategy and combination count."""
+
+    strategy_label: str
+    strategy: str
+    weight_recent: int
+    combinations_per_target: int
+    run_count: int
+    complete_runs: int
+    total_generated_combinations: int
+    main_match_distribution: Tuple[int, int, int, int, int, int, int]
+    best_match_distribution: Tuple[int, int, int, int, int, int, int]
+    bonus_match_count: int
+    average_main_match: float
+    average_best_match: float
+
+
+@dataclass(frozen=True)
+class BacktestExperimentResult:
+    """Contain a comparable grid of strategies, counts, and random seeds."""
+
+    target_count: int
+    seeds: Tuple[int, ...]
+    combination_counts: Tuple[int, ...]
+    frequency_recent: int
+    summaries: Tuple[BacktestExperimentSummary, ...]

@@ -5,7 +5,7 @@ import pytest
 
 from lotto_analysis.models import LottoDraw
 from lotto_analysis.repositories import InMemoryDrawRepository
-from lotto_analysis.services import BacktestService
+from lotto_analysis.services import BacktestExperimentService, BacktestService
 
 
 def _draw(draw_number: int, numbers: tuple, bonus: int = 45) -> LottoDraw:
@@ -77,3 +77,25 @@ def test_backtest_requires_training_draws_before_targets() -> None:
         BacktestService(InMemoryDrawRepository(_draws())).run(
             "uniform", 5, 1, 1
         )
+
+
+def test_backtest_experiment_builds_comparable_strategy_grid() -> None:
+    result = BacktestExperimentService(InMemoryDrawRepository(_draws())).run(
+        target_count=2,
+        combination_counts=(1, 2),
+        seeds=(10, 20),
+        frequency_recent=3,
+    )
+
+    assert len(result.summaries) == 6
+    assert result.seeds == (10, 20)
+    assert result.combination_counts == (1, 2)
+    for summary in result.summaries:
+        assert summary.run_count == 2
+        assert summary.complete_runs == 2
+        assert sum(summary.main_match_distribution) == (
+            2 * 2 * summary.combinations_per_target
+        )
+        assert sum(summary.best_match_distribution) == 4
+    labels = {item.strategy_label for item in result.summaries}
+    assert labels == {"uniform", "frequency_all", "frequency_recent_3"}

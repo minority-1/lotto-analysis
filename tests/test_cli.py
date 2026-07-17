@@ -196,3 +196,27 @@ def test_parser_accepts_backtest_command() -> None:
     assert args.weight_recent == 50
     assert args.seed == 7
     assert args.export is True
+
+
+def test_parser_accepts_backtest_experiment_command() -> None:
+    args = cli.build_parser().parse_args(
+        [
+            "backtest-experiment",
+            "--targets",
+            "10",
+            "--combinations",
+            "1,5,10",
+            "--seeds",
+            "1,2,3",
+            "--frequency-recent",
+            "30",
+            "--export",
+        ]
+    )
+
+    assert args.command == "backtest-experiment"
+    assert args.targets == 10
+    assert args.combinations == (1, 5, 10)
+    assert args.seeds == (1, 2, 3)
+    assert args.frequency_recent == 30
+    assert args.export is True

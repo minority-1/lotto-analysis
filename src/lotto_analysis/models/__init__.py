@@ -3,6 +3,8 @@
 from lotto_analysis.models.collection import CollectionFailure, CollectionSummary
 from lotto_analysis.models.backtest import (
     BacktestCombination,
+    BacktestExperimentResult,
+    BacktestExperimentSummary,
     BacktestResult,
     BacktestTargetResult,
 )
@@ -60,6 +62,8 @@ __all__ = [
     "AnalysisSummary",
     "BasicAnalysisResult",
     "BacktestCombination",
+    "BacktestExperimentResult",
+    "BacktestExperimentSummary",
     "BacktestResult",
     "BacktestTargetResult",
     "BonusFollowupStatistics",
