@@ -29,9 +29,9 @@ class StubRepository(DrawRepository):
 def test_analysis_service_passes_range_to_repository() -> None:
     repository = StubRepository()
 
-    result = AnalysisService(repository).analyze(recent=50)
+    result = AnalysisService(repository).analyze(recent=1)
 
-    assert repository.requested_recent == 50
+    assert repository.requested_recent == 1
     assert result.total_draws == 1
 
 
@@ -49,9 +49,9 @@ def test_analysis_service_requires_two_complete_comparison_periods() -> None:
 def test_analysis_service_passes_relationship_options_to_repository() -> None:
     repository = StubRepository()
 
-    result = AnalysisService(repository).relationships(recent=100, anchor_number=1)
+    result = AnalysisService(repository).relationships(recent=1, anchor_number=1)
 
-    assert repository.requested_recent == 100
+    assert repository.requested_recent == 1
     assert result.anchor_number == 1
     assert result.anchor_appearance_count == 1
 
@@ -59,9 +59,9 @@ def test_analysis_service_passes_relationship_options_to_repository() -> None:
 def test_analysis_service_passes_matrix_range_to_repository() -> None:
     repository = StubRepository()
 
-    result = AnalysisService(repository).matrix(recent=30)
+    result = AnalysisService(repository).matrix(recent=1)
 
-    assert repository.requested_recent == 30
+    assert repository.requested_recent == 1
     assert result.total_draws == 1
 
 
@@ -79,16 +79,27 @@ def test_analysis_service_requires_two_complete_matrix_periods() -> None:
 def test_analysis_service_passes_pattern_range_to_repository() -> None:
     repository = StubRepository()
 
-    result = AnalysisService(repository).patterns(recent=20)
+    result = AnalysisService(repository).patterns(recent=1)
 
-    assert repository.requested_recent == 20
+    assert repository.requested_recent == 1
     assert result.total_draws == 1
 
 
 def test_analysis_service_passes_similarity_range_to_repository() -> None:
     repository = StubRepository()
 
-    result = AnalysisService(repository).similarity(recent=200)
+    result = AnalysisService(repository).similarity(recent=1)
 
-    assert repository.requested_recent == 200
+    assert repository.requested_recent == 1
     assert result.total_draws == 1
+
+
+def test_analysis_service_rejects_recent_above_available_count() -> None:
+    repository = StubRepository()
+
+    try:
+        AnalysisService(repository).patterns(recent=2)
+    except ValueError as exc:
+        assert str(exc) == "recent 2 exceeds available draw count 1"
+    else:
+        raise AssertionError("short recent result should fail")

@@ -9,6 +9,11 @@ from lotto_analysis.models.matrix import (
     MatrixCellComparison,
     MatrixComparisonResult,
 )
+from lotto_analysis.models.generation import (
+    GeneratedCombination,
+    GenerationConditions,
+    GenerationResult,
+)
 from lotto_analysis.models.database import DatabaseImportResult, DatabaseVerificationResult
 from lotto_analysis.models.analysis import (
     AnalysisSummary,
@@ -56,6 +61,9 @@ __all__ = [
     "DatabaseImportResult",
     "DatabaseVerificationResult",
     "GapAnalysisResult",
+    "GeneratedCombination",
+    "GenerationConditions",
+    "GenerationResult",
     "LottoDraw",
     "MatrixAnalysisResult",
     "MatrixCell",

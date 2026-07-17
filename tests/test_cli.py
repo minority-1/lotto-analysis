@@ -135,3 +135,31 @@ def test_parser_accepts_similarity_command() -> None:
     assert args.recent == 100
     assert args.top == 10
     assert args.export is True
+
+
+def test_parser_accepts_generation_command() -> None:
+    args = cli.build_parser().parse_args(
+        [
+            "generate",
+            "--count",
+            "3",
+            "--seed",
+            "42",
+            "--include",
+            "1,2",
+            "--exclude",
+            "44,45",
+            "--odd-min",
+            "2",
+            "--odd-max",
+            "4",
+        ]
+    )
+
+    assert args.command == "generate"
+    assert args.count == 3
+    assert args.seed == 42
+    assert args.include == (1, 2)
+    assert args.exclude == (44, 45)
+    assert args.odd_min == 2
+    assert args.odd_max == 4

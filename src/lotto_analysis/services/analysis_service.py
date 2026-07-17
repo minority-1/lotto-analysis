@@ -1,6 +1,6 @@
 """Application service for descriptive Lotto analysis."""
 
-from typing import Optional
+from typing import Optional, Tuple
 
 from lotto_analysis.analysis import (
     analyze_draws,
@@ -17,6 +17,7 @@ from lotto_analysis.models.analysis import (
     GapAnalysisResult,
     PeriodComparisonResult,
 )
+from lotto_analysis.models.draw import LottoDraw
 from lotto_analysis.models.matrix import MatrixAnalysisResult, MatrixComparisonResult
 from lotto_analysis.models.pattern import PatternAnalysisResult
 from lotto_analysis.models.relationship import RelationshipAnalysisResult
@@ -32,7 +33,7 @@ class AnalysisService:
 
     def analyze(self, recent: int = 0) -> BasicAnalysisResult:
         """Analyze all draws or only the latest requested number of draws."""
-        return analyze_draws(self._repository.list_draws(recent=recent))
+        return analyze_draws(self._recent_draws(recent))
 
     def compare(
         self, recent: int, against_all: bool = False
@@ -61,19 +62,19 @@ class AnalysisService:
 
     def gaps(self, recent: int = 0) -> GapAnalysisResult:
         """Calculate appearance-gap statistics for all or recent draws."""
-        return analyze_gaps(self._repository.list_draws(recent=recent))
+        return analyze_gaps(self._recent_draws(recent))
 
     def relationships(
         self, recent: int = 0, anchor_number: Optional[int] = None
     ) -> RelationshipAnalysisResult:
         """Calculate pair, triple, and optional companion frequencies."""
         return analyze_relationships(
-            self._repository.list_draws(recent=recent), anchor_number=anchor_number
+            self._recent_draws(recent), anchor_number=anchor_number
         )
 
     def matrix(self, recent: int = 0) -> MatrixAnalysisResult:
         """Calculate a 7 by 7 number-frequency matrix for a draw range."""
-        return analyze_matrix(self._repository.list_draws(recent=recent))
+        return analyze_matrix(self._recent_draws(recent))
 
     def compare_matrices(self, recent: int) -> MatrixComparisonResult:
         """Compare the recent N-draw matrix with the immediately preceding N."""
@@ -86,8 +87,21 @@ class AnalysisService:
 
     def patterns(self, recent: int = 0) -> PatternAnalysisResult:
         """Calculate mathematical combination patterns for a draw range."""
-        return analyze_patterns(self._repository.list_draws(recent=recent))
+        return analyze_patterns(self._recent_draws(recent))
 
     def similarity(self, recent: int = 0) -> SimilarityAnalysisResult:
         """Compare winning combinations within all or recent selected draws."""
-        return analyze_similarity(self._repository.list_draws(recent=recent))
+        return analyze_similarity(self._recent_draws(recent))
+
+    def _recent_draws(self, recent: int) -> Tuple[LottoDraw, ...]:
+        """Load a requested range and reject silently shortened results."""
+        if type(recent) is not int or recent < 0:
+            raise ValueError("recent must be a non-negative integer")
+        draws = self._repository.list_draws(recent=recent)
+        if recent and len(draws) < recent:
+            raise ValueError(
+                "recent {0} exceeds available draw count {1}".format(
+                    recent, len(draws)
+                )
+            )
+        return draws

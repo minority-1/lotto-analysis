@@ -16,6 +16,8 @@ from lotto_analysis.models import (
     BasicAnalysisResult,
     CollectionSummary,
     GapAnalysisResult,
+    GenerationConditions,
+    GenerationResult,
     MatrixAnalysisResult,
     MatrixComparisonResult,
     PatternAnalysisResult,
@@ -28,6 +30,7 @@ from lotto_analysis.services import (
     AnalysisService,
     CollectionService,
     DatabaseService,
+    GenerationService,
     ProcessingService,
 )
 from lotto_analysis.storage import CollectionHistoryStore, RawJsonStore
@@ -119,6 +122,29 @@ def build_parser() -> argparse.ArgumentParser:
     similarity_parser.add_argument("--recent", type=_positive_int, default=0)
     similarity_parser.add_argument("--top", type=_positive_int, default=20)
     similarity_parser.add_argument("--export", action="store_true")
+    generate_parser = subparsers.add_parser(
+        "generate", help="generate uniformly random combinations under conditions"
+    )
+    generate_parser.add_argument("--count", type=_positive_int, default=5)
+    generate_parser.add_argument("--seed", type=int)
+    generate_parser.add_argument("--include", type=_number_list, default=())
+    generate_parser.add_argument("--exclude", type=_number_list, default=())
+    generate_parser.add_argument("--odd-min", type=int, default=0)
+    generate_parser.add_argument("--odd-max", type=int, default=6)
+    generate_parser.add_argument("--low-min", type=int, default=0)
+    generate_parser.add_argument("--low-max", type=int, default=6)
+    generate_parser.add_argument("--sum-min", type=int, default=21)
+    generate_parser.add_argument("--sum-max", type=int, default=255)
+    generate_parser.add_argument("--prime-min", type=int, default=0)
+    generate_parser.add_argument("--prime-max", type=int, default=6)
+    generate_parser.add_argument("--ac-min", type=int, default=0)
+    generate_parser.add_argument("--ac-max", type=int, default=10)
+    generate_parser.add_argument("--max-consecutive-pairs", type=int, default=5)
+    generate_parser.add_argument("--max-historical-overlap", type=int, default=4)
+    generate_parser.add_argument("--max-result-overlap", type=int, default=4)
+    generate_parser.add_argument("--max-attempts", type=_positive_int, default=10000)
+    generate_parser.add_argument("--allow-exact-historical", action="store_true")
+    generate_parser.add_argument("--export", action="store_true")
     subparsers.add_parser("db-upgrade", help="upgrade PostgreSQL schema")
     subparsers.add_parser("db-import", help="upsert processed CSV into PostgreSQL")
     subparsers.add_parser(
@@ -164,6 +190,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             return _run_patterns(settings, args.recent, args.export)
         if args.command == "similarity":
             return _run_similarity(settings, args.recent, args.top, args.export)
+        if args.command == "generate":
+            return _run_generation(settings, args)
         if args.command == "db-upgrade":
             upgrade_database(settings.project_root)
             print("Database schema upgraded to head")
@@ -392,6 +420,46 @@ def _run_similarity(
         )
         print("Export: {0}".format(path))
     return 0
+
+
+def _run_generation(settings: Settings, args: argparse.Namespace) -> int:
+    """Generate and print condition-filtered combinations from PostgreSQL."""
+    conditions = GenerationConditions(
+        count=args.count,
+        required_numbers=args.include,
+        excluded_numbers=args.exclude,
+        odd_minimum=args.odd_min,
+        odd_maximum=args.odd_max,
+        low_minimum=args.low_min,
+        low_maximum=args.low_max,
+        sum_minimum=args.sum_min,
+        sum_maximum=args.sum_max,
+        prime_minimum=args.prime_min,
+        prime_maximum=args.prime_max,
+        ac_minimum=args.ac_min,
+        ac_maximum=args.ac_max,
+        maximum_consecutive_pairs=args.max_consecutive_pairs,
+        exclude_exact_historical=not args.allow_exact_historical,
+        maximum_historical_overlap=args.max_historical_overlap,
+        maximum_result_overlap=args.max_result_overlap,
+        maximum_attempts=args.max_attempts,
+        seed=args.seed,
+    )
+    engine = create_database_engine(settings)
+    try:
+        result = GenerationService(PostgresDrawRepository(engine)).generate(conditions)
+    finally:
+        engine.dispose()
+    _print_generation(result)
+    if args.export:
+        suffix = "seed_{0}".format(args.seed) if args.seed is not None else "latest"
+        path = write_analysis_json(
+            settings.analysis_data_dir
+            / "generated_combinations_{0}.json".format(suffix),
+            result,
+        )
+        print("Export: {0}".format(path))
+    return 0 if result.complete else 1
 
 
 def _database_service(settings: Settings) -> DatabaseService:
@@ -752,6 +820,47 @@ def _print_similarity(result: SimilarityAnalysisResult, top: int) -> None:
         )
 
 
+def _print_generation(result: GenerationResult) -> None:
+    """Print generated combinations and transparent filter characteristics."""
+    print(
+        "Generation strategy {0}; {1}/{2} combinations; {3}/{4} attempts; seed {5}".format(
+            result.strategy,
+            len(result.combinations),
+            result.requested_count,
+            result.attempts,
+            result.maximum_attempts,
+            result.seed if result.seed is not None else "random",
+        )
+    )
+    print("Numbers                 Odd/Even  Low/High  Sum  Prime  AC  Consecutive  Past max")
+    for item in result.combinations:
+        print(
+            "{0!s:<23}  {1}:{2}       {3}:{4}      {5:>3}  {6:>5}  {7:>2}  {8:>11}  {9:>8}".format(
+                item.numbers,
+                item.odd_count,
+                item.even_count,
+                item.low_count,
+                item.high_count,
+                item.number_sum,
+                item.prime_count,
+                item.ac_value,
+                item.consecutive_pair_count,
+                item.maximum_historical_overlap,
+            )
+        )
+    if result.rejection_counts:
+        print(
+            "Rejections: {0}".format(
+                " / ".join(
+                    "{0}={1}".format(reason, count)
+                    for reason, count in result.rejection_counts
+                )
+            )
+        )
+    if result.message is not None:
+        print(result.message)
+
+
 def _frequency_text(items: Sequence[object]) -> str:
     """Format value/count result objects without coupling to their model type."""
     return " / ".join(
@@ -783,6 +892,21 @@ def _lotto_number(value: str) -> int:
     if not 1 <= parsed <= 45:
         raise argparse.ArgumentTypeError("value must be from 1 through 45")
     return parsed
+
+
+def _number_list(value: str) -> tuple:
+    """Parse a comma-separated unique list of Lotto numbers."""
+    if not value.strip():
+        return ()
+    try:
+        numbers = tuple(int(item.strip()) for item in value.split(","))
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("numbers must be comma-separated integers") from exc
+    if any(not 1 <= number <= 45 for number in numbers):
+        raise argparse.ArgumentTypeError("numbers must be from 1 through 45")
+    if len(set(numbers)) != len(numbers):
+        raise argparse.ArgumentTypeError("numbers must not contain duplicates")
+    return tuple(sorted(numbers))
 
 
 def _save_failure_history(
