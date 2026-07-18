@@ -33,6 +33,21 @@ def _client() -> TestClient:
     return TestClient(application)
 
 
+def _backtest_client() -> TestClient:
+    draws = (
+        _draw(1, (1, 2, 3, 4, 5, 6)),
+        _draw(2, (7, 8, 9, 10, 11, 12)),
+        _draw(3, (13, 14, 15, 16, 17, 18)),
+        _draw(4, (19, 20, 21, 22, 23, 24)),
+        _draw(5, (25, 26, 27, 28, 29, 30)),
+    )
+    application = create_app()
+    application.dependency_overrides[get_draw_repository] = lambda: InMemoryDrawRepository(
+        draws
+    )
+    return TestClient(application)
+
+
 def test_health_and_openapi_are_available() -> None:
     client = _client()
 
@@ -188,3 +203,58 @@ def test_frequency_generation_and_domain_validation_errors() -> None:
     assert "must not overlap" in overlap.json()["detail"]
     assert invalid_weight.status_code == 422
     assert "requires the frequency strategy" in invalid_weight.json()["detail"]
+
+
+def test_detailed_backtest_api_preserves_training_boundary_and_distributions() -> None:
+    response = _backtest_client().post(
+        "/api/backtests/run",
+        json={
+            "strategy": "uniform",
+            "target_count": 2,
+            "combinations_per_target": 3,
+            "base_seed": 100,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["complete_targets"] == 2
+    assert body["total_generated_combinations"] == 6
+    assert sum(body["main_match_distribution"]) == 6
+    assert sum(body["best_match_distribution"]) == 2
+    assert body["targets"][0]["target_draw_number"] == 4
+    assert body["targets"][0]["training_end_draw"] == 3
+    assert body["targets"][1]["target_draw_number"] == 5
+    assert body["targets"][1]["training_end_draw"] == 4
+
+
+def test_backtest_experiment_api_builds_comparable_summary_grid() -> None:
+    response = _backtest_client().post(
+        "/api/backtests/experiment",
+        json={
+            "target_count": 2,
+            "combination_counts": [1, 2],
+            "seeds": [10, 20],
+            "frequency_recent": 3,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body["summaries"]) == 6
+    assert body["seeds"] == [10, 20]
+    assert body["combination_counts"] == [1, 2]
+    for summary in body["summaries"]:
+        assert summary["complete_runs"] == 2
+        assert summary["run_count"] == 2
+        assert sum(summary["best_match_distribution"]) == 4
+
+
+def test_backtest_api_rejects_future_leakage_prone_target_range() -> None:
+    response = _backtest_client().post(
+        "/api/backtests/run",
+        json={"target_count": 5, "combinations_per_target": 1},
+    )
+
+    assert response.status_code == 422
+    assert "requires more than 5 available draws" in response.json()["detail"]

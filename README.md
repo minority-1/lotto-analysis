@@ -106,6 +106,8 @@ uvicorn lotto_analysis.api.main:app --reload
 - `GET /api/analysis/patterns?recent=100`
 - `GET /api/analysis/similarity?recent=100`
 - `POST /api/combinations/generate`
+- `POST /api/backtests/run`
+- `POST /api/backtests/experiment`
 
 번호 생성 요청 예시:
 
@@ -123,6 +125,20 @@ uvicorn lotto_analysis.api.main:app --reload
   "seed": 42
 }
 ```
+
+백테스트 요청 예시:
+
+```json
+{
+  "strategy": "frequency",
+  "target_count": 20,
+  "combinations_per_target": 5,
+  "base_seed": 42,
+  "weight_recent": 50
+}
+```
+
+반복 비교는 `target_count`, `combination_counts`, `seeds`, `frequency_recent`를 전달합니다. 조합 수가 다른 결과의 최고 일치 수를 전략 성능으로 직접 비교하면 안 됩니다.
 
 `recent=0`은 전체 범위를 의미합니다. 보유 회차보다 큰 최근 범위는 축소하지 않고 `422`를 반환하며, 데이터베이스 장애는 접속 상세를 숨긴 `503` 응답으로 반환합니다.
 

@@ -8,6 +8,12 @@ from lotto_analysis.api.schemas.analysis import (
 from lotto_analysis.api.schemas.common import ErrorResponse, HealthResponse
 from lotto_analysis.api.schemas.draws import DashboardResponse, DrawResponse
 from lotto_analysis.api.schemas.generation import GenerationRequest, GenerationResponse
+from lotto_analysis.api.schemas.backtest import (
+    BacktestExperimentRequest,
+    BacktestExperimentResponse,
+    BacktestRequest,
+    BacktestResponse,
+)
 from lotto_analysis.api.schemas.advanced_analysis import (
     MatrixAnalysisResponse,
     MatrixComparisonResponse,
@@ -31,4 +37,8 @@ __all__ = [
     "SimilarityAnalysisResponse",
     "GenerationRequest",
     "GenerationResponse",
+    "BacktestExperimentRequest",
+    "BacktestExperimentResponse",
+    "BacktestRequest",
+    "BacktestResponse",
 ]

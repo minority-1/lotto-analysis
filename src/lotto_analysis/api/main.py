@@ -11,6 +11,7 @@ from lotto_analysis.api.routers.advanced_analysis import router as advanced_rout
 from lotto_analysis.api.routers.draws import router as draws_router
 from lotto_analysis.api.routers.health import router as health_router
 from lotto_analysis.api.routers.generation import router as generation_router
+from lotto_analysis.api.routers.backtests import router as backtests_router
 
 
 logger = logging.getLogger(__name__)
@@ -28,6 +29,7 @@ def create_app() -> FastAPI:
     application.include_router(analysis_router, prefix="/api")
     application.include_router(advanced_router, prefix="/api")
     application.include_router(generation_router, prefix="/api")
+    application.include_router(backtests_router, prefix="/api")
 
     @application.exception_handler(ValueError)
     async def value_error_handler(request: Request, exc: ValueError) -> JSONResponse:
