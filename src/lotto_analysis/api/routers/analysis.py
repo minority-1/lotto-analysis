@@ -1,5 +1,8 @@
 """Descriptive analysis routes."""
 
+from datetime import date
+from typing import Optional
+
 from fastapi import APIRouter, Depends, Query
 
 from lotto_analysis.api.dependencies import get_draw_repository
@@ -22,6 +25,24 @@ def basic_analysis(
 ) -> BasicAnalysisResponse:
     """Return basic descriptive statistics for all or recent draws."""
     result = AnalysisService(repository).analyze(recent=recent)
+    return BasicAnalysisResponse.model_validate(result)
+
+
+@router.get("/basic/range", response_model=BasicAnalysisResponse)
+def basic_range_analysis(
+    start_draw: Optional[int] = Query(default=None, ge=1),
+    end_draw: Optional[int] = Query(default=None, ge=1),
+    start_date: Optional[date] = Query(default=None),
+    end_date: Optional[date] = Query(default=None),
+    repository: DrawRepository = Depends(get_draw_repository),
+) -> BasicAnalysisResponse:
+    """Return basic statistics for one inclusive draw or date range."""
+    result = AnalysisService(repository).analyze_range(
+        start_draw=start_draw,
+        end_draw=end_draw,
+        start_date=start_date,
+        end_date=end_date,
+    )
     return BasicAnalysisResponse.model_validate(result)
 
 

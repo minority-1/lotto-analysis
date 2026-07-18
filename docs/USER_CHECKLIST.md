@@ -577,6 +577,13 @@ uvicorn lotto_analysis.api.main:app --reload
 * `[자동 확인]` `GET /api/draws/page?limit=50&offset=0`의 `total`, `has_more`와 오름차순 목록 확인
 * `[사용자 확인]` Swagger UI에서 최신·단일·페이지 조회를 각 1회 실행
 
+### 사용자 지정 기본 분석 API
+
+* `[자동 확인]` 회차 시작·끝을 포함한 기본 통계 범위 확인
+* `[자동 확인]` 날짜 시작·끝을 포함한 기본 통계 범위 확인
+* `[자동 확인]` 불완전·혼합·빈 범위가 `422`인지 확인
+* `[사용자 확인]` Swagger UI에서 회차 범위와 날짜 범위를 각각 1회 실행
+
 종료는 Streamlit을 실행한 터미널에서 `Ctrl+C`를 누른다. 화면은 현재 읽기 전용이다.
 
 ## 변경 이력
@@ -620,3 +627,4 @@ uvicorn lotto_analysis.api.main:app --reload
 * 2026-07-18: FastAPI 단일·반복 백테스트 API와 핵심 범위 연결 완료.
 * 2026-07-18: FastAPI 전체 코드 리뷰 P1·P2 보완 및 단계 마감.
 * 2026-07-19: 회차 상세·최신·페이지 조회 API와 PostgreSQL 전용 조회 쿼리 추가.
+* 2026-07-19: 회차·날짜 사용자 지정 범위 기본 통계 API 추가.

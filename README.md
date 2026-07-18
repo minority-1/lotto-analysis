@@ -101,6 +101,8 @@ uvicorn lotto_analysis.api.main:app --reload
 - `GET /api/draws/page?limit=50&offset=0`
 - `GET /api/dashboard`
 - `GET /api/analysis/basic?recent=20`
+- `GET /api/analysis/basic/range?start_draw=1000&end_draw=1100`
+- `GET /api/analysis/basic/range?start_date=2025-01-01&end_date=2025-12-31`
 - `GET /api/analysis/compare?recent=50&against_all=false`
 - `GET /api/analysis/gaps?recent=100`
 - `GET /api/analysis/relationships?recent=100&number=1`
@@ -144,6 +146,8 @@ uvicorn lotto_analysis.api.main:app --reload
 반복 비교는 `target_count`, `combination_counts`, `seeds`, `frequency_recent`를 전달합니다. 조합 수가 다른 결과의 최고 일치 수를 전략 성능으로 직접 비교하면 안 됩니다.
 
 `recent=0`은 전체 범위를 의미합니다. 보유 회차보다 큰 최근 범위는 축소하지 않고 `422`를 반환합니다. 페이지 조회는 회차 오름차순이며 `limit`은 최대 200입니다. 존재하지 않는 단일 회차는 `404`, 데이터베이스 장애는 접속 상세를 숨긴 `503` 응답으로 반환합니다.
+
+사용자 지정 기본 분석은 `start_draw`·`end_draw` 또는 `start_date`·`end_date` 한 쌍만 전달합니다. 시작과 끝은 모두 포함하며 두 범위 방식을 섞거나 결과가 없는 범위는 `422`입니다.
 
 Next.js 로컬 개발 origin은 기본적으로 `http://localhost:3000`과 `http://127.0.0.1:3000`을 허용합니다. 다른 origin은 `.env`의 `LOTTO_CORS_ORIGINS`에 쉼표로 구분해 지정합니다. 백테스트는 현재 동기 실행이므로 API 요청 스키마의 실행량 상한을 적용합니다.
 

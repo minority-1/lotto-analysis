@@ -118,6 +118,53 @@ def test_basic_analysis_uses_service_and_rejects_shortened_recent_range() -> Non
     assert too_many.json()["detail"] == "recent 3 exceeds available draw count 2"
 
 
+def test_basic_range_analysis_supports_draw_numbers_and_dates() -> None:
+    client = _client()
+
+    by_draw = client.get(
+        "/api/analysis/basic/range", params={"start_draw": 1, "end_draw": 1}
+    )
+    by_date = client.get(
+        "/api/analysis/basic/range",
+        params={"start_date": "2026-07-02", "end_date": "2026-07-02"},
+    )
+
+    assert by_draw.status_code == 200
+    assert by_draw.json()["total_draws"] == 1
+    assert by_draw.json()["start_draw"] == 1
+    assert by_date.status_code == 200
+    assert by_date.json()["start_draw"] == 2
+    assert by_date.json()["end_draw"] == 2
+
+
+def test_basic_range_analysis_rejects_incomplete_mixed_and_empty_ranges() -> None:
+    client = _client()
+
+    incomplete = client.get(
+        "/api/analysis/basic/range", params={"start_draw": 1}
+    )
+    mixed = client.get(
+        "/api/analysis/basic/range",
+        params={
+            "start_draw": 1,
+            "end_draw": 2,
+            "start_date": "2026-07-01",
+            "end_date": "2026-07-02",
+        },
+    )
+    empty = client.get(
+        "/api/analysis/basic/range",
+        params={"start_draw": 100, "end_draw": 200},
+    )
+
+    assert incomplete.status_code == 422
+    assert "both required" in incomplete.json()["detail"]
+    assert mixed.status_code == 422
+    assert "exactly one" in mixed.json()["detail"]
+    assert empty.status_code == 422
+    assert empty.json()["detail"] == "selected range contains no draws"
+
+
 def test_query_validation_rejects_negative_recent() -> None:
     response = _client().get("/api/draws", params={"recent": -1})
 

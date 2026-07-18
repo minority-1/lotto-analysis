@@ -1,5 +1,6 @@
 """Application service for descriptive Lotto analysis."""
 
+from datetime import date
 from typing import Optional, Tuple
 
 from lotto_analysis.analysis import (
@@ -34,6 +35,30 @@ class AnalysisService:
     def analyze(self, recent: int = 0) -> BasicAnalysisResult:
         """Analyze all draws or only the latest requested number of draws."""
         return analyze_draws(self._recent_draws(recent))
+
+    def analyze_range(
+        self,
+        start_draw: Optional[int] = None,
+        end_draw: Optional[int] = None,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+    ) -> BasicAnalysisResult:
+        """Analyze one inclusive draw-number or draw-date range."""
+        draw_range = start_draw is not None or end_draw is not None
+        date_range = start_date is not None or end_date is not None
+        if draw_range == date_range:
+            raise ValueError("provide exactly one draw range or date range")
+        if draw_range:
+            if start_draw is None or end_draw is None:
+                raise ValueError("start_draw and end_draw are both required")
+            draws = self._repository.list_draws_by_number_range(start_draw, end_draw)
+        else:
+            if start_date is None or end_date is None:
+                raise ValueError("start_date and end_date are both required")
+            draws = self._repository.list_draws_by_date_range(start_date, end_date)
+        if not draws:
+            raise ValueError("selected range contains no draws")
+        return analyze_draws(draws)
 
     def compare(
         self, recent: int, against_all: bool = False

@@ -1,10 +1,12 @@
 """PostgreSQL implementation of the normalized draw repository."""
 
+from datetime import date
 from typing import Iterable, Optional, Tuple
 
 from sqlalchemy import Engine, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import Select
 
 from lotto_analysis.database.models import LottoDrawRecord
 from lotto_analysis.models.draw import LottoDraw
@@ -64,6 +66,44 @@ class PostgresDrawRepository(DrawRepository):
         statement = select(func.count()).select_from(LottoDrawRecord)
         with Session(self._engine) as session:
             return int(session.scalar(statement) or 0)
+
+    def list_draws_by_number_range(
+        self, start_draw: int, end_draw: int
+    ) -> Tuple[LottoDraw, ...]:
+        """Return an inclusive draw-number range using indexed predicates."""
+        if type(start_draw) is not int or start_draw < 1:
+            raise ValueError("start_draw must be a positive integer")
+        if type(end_draw) is not int or end_draw < start_draw:
+            raise ValueError("end_draw must be greater than or equal to start_draw")
+        statement = (
+            select(LottoDrawRecord)
+            .where(LottoDrawRecord.draw_number.between(start_draw, end_draw))
+            .order_by(LottoDrawRecord.draw_number)
+        )
+        return self._draws_for(statement)
+
+    def list_draws_by_date_range(
+        self, start_date: date, end_date: date
+    ) -> Tuple[LottoDraw, ...]:
+        """Return an inclusive draw-date range in draw-number order."""
+        if type(start_date) is not date or type(end_date) is not date:
+            raise ValueError("start_date and end_date must be dates")
+        if end_date < start_date:
+            raise ValueError("end_date must be greater than or equal to start_date")
+        statement = (
+            select(LottoDrawRecord)
+            .where(LottoDrawRecord.draw_date.between(start_date, end_date))
+            .order_by(LottoDrawRecord.draw_number)
+        )
+        return self._draws_for(statement)
+
+    def _draws_for(
+        self, statement: Select[Tuple[LottoDrawRecord]]
+    ) -> Tuple[LottoDraw, ...]:
+        """Execute a record selection and map its rows to domain draws."""
+        with Session(self._engine) as session:
+            records = tuple(session.scalars(statement))
+        return tuple(_to_domain(record) for record in records)
 
     def upsert_draws(self, draws: Iterable[LottoDraw]) -> int:
         """Insert or synchronize draws in one transaction by draw number."""
