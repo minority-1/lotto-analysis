@@ -37,6 +37,11 @@ def test_postgres_repository_upserts_and_reads_draw() -> None:
     try:
         assert repository.upsert_draws((test_draw,)) == 1
         assert repository.list_draws(recent=1) == (test_draw,)
+        assert repository.get_draw(test_draw.draw_number) == test_draw
+        last_page = repository.list_draws_page(
+            limit=1, offset=repository.count_draws() - 1
+        )
+        assert last_page == (test_draw,)
     finally:
         with engine.begin() as connection:
             connection.execute(

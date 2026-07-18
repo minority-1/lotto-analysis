@@ -6,7 +6,11 @@ from lotto_analysis.api.schemas.analysis import (
     PeriodComparisonResponse,
 )
 from lotto_analysis.api.schemas.common import ErrorResponse, HealthResponse
-from lotto_analysis.api.schemas.draws import DashboardResponse, DrawResponse
+from lotto_analysis.api.schemas.draws import (
+    DashboardResponse,
+    DrawPageResponse,
+    DrawResponse,
+)
 from lotto_analysis.api.schemas.generation import GenerationRequest, GenerationResponse
 from lotto_analysis.api.schemas.backtest import (
     BacktestExperimentRequest,
@@ -25,6 +29,7 @@ from lotto_analysis.api.schemas.advanced_analysis import (
 __all__ = [
     "BasicAnalysisResponse",
     "DashboardResponse",
+    "DrawPageResponse",
     "DrawResponse",
     "ErrorResponse",
     "HealthResponse",

@@ -567,8 +567,15 @@ uvicorn lotto_analysis.api.main:app --reload
 * `[완료/P2]` Next.js 로컬 개발 CORS와 환경변수 설정
 * `[완료/P2]` DB 오류의 상세 비노출 503 자동 테스트
 * `[보류/P3]` 다중 사용자 백테스트 작업 큐
-* `[보류/P3]` 전체 회차 조회 페이지네이션
+* `[완료/P3]` 전체 회차 상세·최신·페이지네이션 조회
 * `[보류/P3]` PostgreSQL 전체 API 통합 테스트 확대
+
+### 회차 탐색 API
+
+* `[자동 확인]` `GET /api/draws/latest`가 최신 회차를 반환하는지 확인
+* `[자동 확인]` `GET /api/draws/1`이 1회 데이터를, 없는 회차가 `404`를 반환하는지 확인
+* `[자동 확인]` `GET /api/draws/page?limit=50&offset=0`의 `total`, `has_more`와 오름차순 목록 확인
+* `[사용자 확인]` Swagger UI에서 최신·단일·페이지 조회를 각 1회 실행
 
 종료는 Streamlit을 실행한 터미널에서 `Ctrl+C`를 누른다. 화면은 현재 읽기 전용이다.
 
@@ -612,3 +619,4 @@ uvicorn lotto_analysis.api.main:app --reload
 * 2026-07-18: FastAPI 균등·빈도 가중 조건 기반 번호 생성 API 추가.
 * 2026-07-18: FastAPI 단일·반복 백테스트 API와 핵심 범위 연결 완료.
 * 2026-07-18: FastAPI 전체 코드 리뷰 P1·P2 보완 및 단계 마감.
+* 2026-07-19: 회차 상세·최신·페이지 조회 API와 PostgreSQL 전용 조회 쿼리 추가.

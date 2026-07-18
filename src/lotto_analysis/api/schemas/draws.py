@@ -21,6 +21,16 @@ class DrawResponse(BaseModel):
     collected_at: Optional[datetime]
 
 
+class DrawPageResponse(BaseModel):
+    """Represent one page of normalized draws and its paging metadata."""
+
+    items: List[DrawResponse]
+    total: int
+    limit: int
+    offset: int
+    has_more: bool
+
+
 class DashboardResponse(BaseModel):
     """Describe normalized draw coverage and latest data."""
 

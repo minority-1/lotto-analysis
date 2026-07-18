@@ -71,6 +71,40 @@ def test_draws_and_dashboard_return_explicit_json_contracts() -> None:
     assert dashboard.json()["missing_draw_numbers"] == []
 
 
+def test_draw_detail_latest_and_page_return_navigation_contracts() -> None:
+    client = _client()
+
+    detail = client.get("/api/draws/1")
+    latest = client.get("/api/draws/latest")
+    page = client.get("/api/draws/page", params={"limit": 1, "offset": 1})
+
+    assert detail.status_code == 200
+    assert detail.json()["draw_number"] == 1
+    assert latest.status_code == 200
+    assert latest.json()["draw_number"] == 2
+    assert page.status_code == 200
+    assert page.json() == {
+        "items": [latest.json()],
+        "total": 2,
+        "limit": 1,
+        "offset": 1,
+        "has_more": False,
+    }
+
+
+def test_draw_detail_returns_404_and_page_validates_bounds() -> None:
+    client = _client()
+
+    missing = client.get("/api/draws/999")
+    excessive_limit = client.get("/api/draws/page", params={"limit": 201})
+    negative_offset = client.get("/api/draws/page", params={"offset": -1})
+
+    assert missing.status_code == 404
+    assert missing.json()["detail"] == "draw not found"
+    assert excessive_limit.status_code == 422
+    assert negative_offset.status_code == 422
+
+
 def test_basic_analysis_uses_service_and_rejects_shortened_recent_range() -> None:
     client = _client()
 
