@@ -350,3 +350,12 @@
 * 회차·대시보드, 기본·고급 분석, 번호 생성과 단일·반복 백테스트를 기존 Service 계층에 연결했다.
 * 다음 범위는 API 전체 코드 리뷰, CORS·운영 설정, 성능 한도와 선택적 PostgreSQL 통합 테스트다.
 * 인증, 사용자별 저장과 비동기 작업 큐는 실제 Next.js·배포 요구가 정해질 때 결정한다.
+
+## 2026-07-18: FastAPI 리뷰 보완과 단계 마감
+
+* FastAPI lifespan 종료 시 생성된 SQLAlchemy 엔진을 dispose하고 설정·엔진 캐시를 비운다.
+* 동기 번호 생성과 백테스트에 개수·시도·실험 grid의 API 상한을 적용한다.
+* CORS 기본 origin은 Next.js 로컬 3000 포트이며 `LOTTO_CORS_ORIGINS`로 교체한다.
+* 허용 CORS 메서드는 GET·POST·OPTIONS이고 인증 전이므로 credential은 허용하지 않는다.
+* DB 오류는 내부 상세 없는 503으로 유지하고 자동 테스트로 검증한다.
+* 상세 리뷰와 후속 P3는 `docs/reviews/2026-07-18-fastapi.md`에 기록한다.

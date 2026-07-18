@@ -560,6 +560,16 @@ uvicorn lotto_analysis.api.main:app --reload
 * `[완료]` 단일·반복 백테스트
 * `[후속]` 전체 코드 리뷰와 운영 설정
 
+### FastAPI 코드 리뷰 보완
+
+* `[완료/P1]` 앱 종료 시 SQLAlchemy 엔진 dispose와 캐시 정리
+* `[완료/P1]` 동기 생성·백테스트 요청 실행량 상한
+* `[완료/P2]` Next.js 로컬 개발 CORS와 환경변수 설정
+* `[완료/P2]` DB 오류의 상세 비노출 503 자동 테스트
+* `[보류/P3]` 다중 사용자 백테스트 작업 큐
+* `[보류/P3]` 전체 회차 조회 페이지네이션
+* `[보류/P3]` PostgreSQL 전체 API 통합 테스트 확대
+
 종료는 Streamlit을 실행한 터미널에서 `Ctrl+C`를 누른다. 화면은 현재 읽기 전용이다.
 
 ## 변경 이력
@@ -601,3 +611,4 @@ uvicorn lotto_analysis.api.main:app --reload
 * 2026-07-18: FastAPI 관계·행렬·패턴·유사도 고급 분석 API 추가.
 * 2026-07-18: FastAPI 균등·빈도 가중 조건 기반 번호 생성 API 추가.
 * 2026-07-18: FastAPI 단일·반복 백테스트 API와 핵심 범위 연결 완료.
+* 2026-07-18: FastAPI 전체 코드 리뷰 P1·P2 보완 및 단계 마감.

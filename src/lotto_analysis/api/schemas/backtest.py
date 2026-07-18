@@ -1,19 +1,29 @@
 """Leakage-safe backtest API request and response schemas."""
 
-from typing import List, Literal, Tuple
+from typing import Annotated, List, Literal, Tuple
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+
+CombinationCount = Annotated[int, Field(ge=1, le=50)]
 
 
 class BacktestRequest(BaseModel):
     """Define one detailed historical generation backtest."""
 
     strategy: Literal["uniform", "frequency"] = "uniform"
-    target_count: int = Field(default=20, ge=1, le=500)
-    combinations_per_target: int = Field(default=5, ge=1, le=100)
+    target_count: int = Field(default=20, ge=1, le=100)
+    combinations_per_target: int = Field(default=5, ge=1, le=50)
     base_seed: int = 42
     weight_recent: int = Field(default=0, ge=0)
-    maximum_attempts: int = Field(default=10000, ge=1, le=1000000)
+    maximum_attempts: int = Field(default=10000, ge=1, le=10000)
+
+    @model_validator(mode="after")
+    def validate_total_work(self) -> "BacktestRequest":
+        """Limit synchronous target-by-combination work per request."""
+        if self.target_count * self.combinations_per_target > 5000:
+            raise ValueError("backtest target and combination product exceeds 5000")
+        return self
 
 
 class BacktestCombinationResponse(BaseModel):
@@ -64,13 +74,27 @@ class BacktestResponse(BaseModel):
 class BacktestExperimentRequest(BaseModel):
     """Define a comparable repeated strategy experiment grid."""
 
-    target_count: int = Field(default=20, ge=1, le=500)
-    combination_counts: List[int] = Field(
-        default_factory=lambda: [1, 5, 10, 50], min_length=1
+    target_count: int = Field(default=20, ge=1, le=100)
+    combination_counts: List[CombinationCount] = Field(
+        default_factory=lambda: [1, 5, 10, 50], min_length=1, max_length=4
     )
-    seeds: List[int] = Field(default_factory=lambda: [41, 42, 43], min_length=1)
+    seeds: List[int] = Field(
+        default_factory=lambda: [41, 42, 43], min_length=1, max_length=10
+    )
     frequency_recent: int = Field(default=50, ge=1)
-    maximum_attempts: int = Field(default=10000, ge=1, le=1000000)
+    maximum_attempts: int = Field(default=10000, ge=1, le=10000)
+
+    @model_validator(mode="after")
+    def validate_experiment_grid(self) -> "BacktestExperimentRequest":
+        """Reject duplicate axes and excessive synchronous experiment grids."""
+        if len(set(self.combination_counts)) != len(self.combination_counts):
+            raise ValueError("combination_counts must not contain duplicates")
+        if len(set(self.seeds)) != len(self.seeds):
+            raise ValueError("seeds must not contain duplicates")
+        work = self.target_count * sum(self.combination_counts) * len(self.seeds) * 3
+        if work > 100000:
+            raise ValueError("backtest experiment work exceeds 100000 combinations")
+        return self
 
 
 class BacktestExperimentSummaryResponse(BaseModel):

@@ -42,6 +42,7 @@ def test_settings_honor_path_overrides(tmp_path: Path) -> None:
             "POSTGRES_DB": "lotto db",
             "POSTGRES_USER": "lotto user",
             "POSTGRES_PASSWORD": "p@ss word",
+            "LOTTO_CORS_ORIGINS": "https://app.example.test,http://localhost:3000",
         },
         project_root=tmp_path,
     )
@@ -65,6 +66,18 @@ def test_settings_honor_path_overrides(tmp_path: Path) -> None:
     assert settings.database_url == (
         "postgresql+psycopg://lotto%20user:p%40ss%20word@db.test:5544/lotto%20db"
     )
+    assert settings.cors_origins == (
+        "https://app.example.test",
+        "http://localhost:3000",
+    )
+
+
+def test_settings_reject_duplicate_cors_origins(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="must not contain duplicates"):
+        Settings.from_env(
+            environ={"LOTTO_CORS_ORIGINS": "http://localhost,http://localhost"},
+            project_root=tmp_path,
+        )
 
 
 @pytest.mark.parametrize("port", ["invalid", "0", "65536"])

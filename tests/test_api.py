@@ -1,6 +1,7 @@
 from datetime import date
 
 from fastapi.testclient import TestClient
+from sqlalchemy.exc import SQLAlchemyError
 
 from lotto_analysis.api.dependencies import get_draw_repository
 from lotto_analysis.api.main import create_app
@@ -258,3 +259,54 @@ def test_backtest_api_rejects_future_leakage_prone_target_range() -> None:
 
     assert response.status_code == 422
     assert "requires more than 5 available draws" in response.json()["detail"]
+
+
+def test_cors_allows_configured_nextjs_origin() -> None:
+    application = create_app(cors_origins=["http://localhost:3000"])
+    client = TestClient(application)
+
+    response = client.options(
+        "/api/health",
+        headers={
+            "Origin": "http://localhost:3000",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
+
+
+def test_database_errors_return_sanitized_service_unavailable() -> None:
+    application = create_app(cors_origins=[])
+
+    def failing_repository() -> InMemoryDrawRepository:
+        raise SQLAlchemyError("secret database connection details")
+
+    application.dependency_overrides[get_draw_repository] = failing_repository
+    response = TestClient(application).get("/api/dashboard")
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "database service unavailable"}
+    assert "secret" not in response.text
+
+
+def test_backtest_requests_reject_excessive_synchronous_work() -> None:
+    client = _backtest_client()
+    detail = client.post(
+        "/api/backtests/run",
+        json={"target_count": 100, "combinations_per_target": 51},
+    )
+    experiment = client.post(
+        "/api/backtests/experiment",
+        json={
+            "target_count": 100,
+            "combination_counts": [50, 49, 48, 47],
+            "seeds": list(range(10)),
+            "frequency_recent": 3,
+        },
+    )
+
+    assert detail.status_code == 422
+    assert experiment.status_code == 422
+    assert "work exceeds 100000" in experiment.text

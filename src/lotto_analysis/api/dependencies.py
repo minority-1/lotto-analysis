@@ -24,3 +24,11 @@ def get_engine() -> Engine:
 def get_draw_repository() -> DrawRepository:
     """Build a draw repository backed by the shared engine."""
     return PostgresDrawRepository(get_engine())
+
+
+def dispose_engine() -> None:
+    """Dispose the cached pool at API shutdown without creating a new engine."""
+    if get_engine.cache_info().currsize:
+        get_engine().dispose()
+        get_engine.cache_clear()
+    get_settings.cache_clear()

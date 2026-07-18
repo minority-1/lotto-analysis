@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 import os
 from pathlib import Path
-from typing import Mapping, Optional
+from typing import Mapping, Optional, Tuple
 from urllib.parse import quote
 
 from dotenv import load_dotenv
@@ -44,6 +44,10 @@ class Settings:
     postgres_database: str = "lotto_analysis"
     postgres_user: str = "lotto_app"
     postgres_password: str = ""
+    cors_origins: Tuple[str, ...] = (
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    )
 
     @classmethod
     def from_env(
@@ -121,6 +125,16 @@ class Settings:
             raise ValueError("LOTTO_LOG_BACKUP_COUNT cannot be negative")
 
         log_dir = _resolve_path(env.get("LOTTO_LOG_DIR", "logs"), root)
+        cors_origins = tuple(
+            origin.strip()
+            for origin in env.get(
+                "LOTTO_CORS_ORIGINS",
+                "http://localhost:3000,http://127.0.0.1:3000",
+            ).split(",")
+            if origin.strip()
+        )
+        if len(set(cors_origins)) != len(cors_origins):
+            raise ValueError("LOTTO_CORS_ORIGINS must not contain duplicates")
 
         return cls(
             project_root=root,
@@ -167,6 +181,7 @@ class Settings:
             postgres_database=env.get("POSTGRES_DB", "lotto_analysis"),
             postgres_user=env.get("POSTGRES_USER", "lotto_app"),
             postgres_password=env.get("POSTGRES_PASSWORD", ""),
+            cors_origins=cors_origins,
         )
 
     @property

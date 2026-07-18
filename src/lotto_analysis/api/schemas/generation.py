@@ -10,7 +10,7 @@ class GenerationRequest(BaseModel):
 
     strategy: Literal["uniform", "frequency"] = "uniform"
     weight_recent: int = Field(default=0, ge=0)
-    count: int = Field(default=5, ge=1, le=100)
+    count: int = Field(default=5, ge=1, le=50)
     required_numbers: List[int] = Field(default_factory=list, max_length=6)
     excluded_numbers: List[int] = Field(default_factory=list, max_length=39)
     odd_minimum: int = Field(default=0, ge=0, le=6)
@@ -27,7 +27,7 @@ class GenerationRequest(BaseModel):
     exclude_exact_historical: bool = True
     maximum_historical_overlap: int = Field(default=4, ge=0, le=6)
     maximum_result_overlap: int = Field(default=4, ge=0, le=6)
-    maximum_attempts: int = Field(default=10000, ge=1, le=1000000)
+    maximum_attempts: int = Field(default=10000, ge=1, le=100000)
     seed: Optional[int] = None
 
 
