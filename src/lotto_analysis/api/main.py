@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 
 from lotto_analysis.api.routers.analysis import router as analysis_router
+from lotto_analysis.api.routers.advanced_analysis import router as advanced_router
 from lotto_analysis.api.routers.draws import router as draws_router
 from lotto_analysis.api.routers.health import router as health_router
 
@@ -24,6 +25,7 @@ def create_app() -> FastAPI:
     application.include_router(health_router, prefix="/api")
     application.include_router(draws_router, prefix="/api")
     application.include_router(analysis_router, prefix="/api")
+    application.include_router(advanced_router, prefix="/api")
 
     @application.exception_handler(ValueError)
     async def value_error_handler(request: Request, exc: ValueError) -> JSONResponse:

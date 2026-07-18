@@ -7,6 +7,13 @@ from lotto_analysis.api.schemas.analysis import (
 )
 from lotto_analysis.api.schemas.common import ErrorResponse, HealthResponse
 from lotto_analysis.api.schemas.draws import DashboardResponse, DrawResponse
+from lotto_analysis.api.schemas.advanced_analysis import (
+    MatrixAnalysisResponse,
+    MatrixComparisonResponse,
+    PatternAnalysisResponse,
+    RelationshipAnalysisResponse,
+    SimilarityAnalysisResponse,
+)
 
 __all__ = [
     "BasicAnalysisResponse",
@@ -16,4 +23,9 @@ __all__ = [
     "HealthResponse",
     "GapAnalysisResponse",
     "PeriodComparisonResponse",
+    "MatrixAnalysisResponse",
+    "MatrixComparisonResponse",
+    "PatternAnalysisResponse",
+    "RelationshipAnalysisResponse",
+    "SimilarityAnalysisResponse",
 ]

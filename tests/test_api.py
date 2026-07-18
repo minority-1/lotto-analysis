@@ -102,3 +102,43 @@ def test_gap_analysis_returns_all_numbers_and_rejects_too_large_range() -> None:
     assert len(response.json()["numbers"]) == 45
     assert response.json()["numbers"][0]["appearance_draws"] == [1]
     assert too_many.status_code == 422
+
+
+def test_relationship_and_pattern_endpoints_return_nested_contracts() -> None:
+    client = _client()
+
+    relationships = client.get(
+        "/api/analysis/relationships", params={"recent": 2, "number": 1}
+    )
+    patterns = client.get("/api/analysis/patterns", params={"recent": 2})
+
+    assert relationships.status_code == 200
+    assert relationships.json()["total_draws"] == 2
+    assert relationships.json()["anchor_number"] == 1
+    assert relationships.json()["pairs"][0]["numbers"] == [1, 2]
+    assert len(relationships.json()["lag_overlaps"]) == 3
+    assert patterns.status_code == 200
+    assert patterns.json()["total_draws"] == 2
+    assert len(patterns.json()["draws"]) == 2
+    assert sum(item["count"] for item in patterns.json()["ac_distribution"]) == 2
+
+
+def test_matrix_and_similarity_endpoints_preserve_invariants() -> None:
+    client = _client()
+
+    matrix = client.get("/api/analysis/matrix", params={"recent": 2})
+    comparison = client.get(
+        "/api/analysis/matrix/compare", params={"recent": 1}
+    )
+    similarity = client.get("/api/analysis/similarity", params={"recent": 2})
+
+    assert matrix.status_code == 200
+    assert len(matrix.json()["cells"]) == 49
+    assert sum(matrix.json()["row_totals"]) == 12
+    assert comparison.status_code == 200
+    assert len(comparison.json()["cells"]) == 49
+    assert comparison.json()["baseline_start_draw"] == 1
+    assert comparison.json()["comparison_end_draw"] == 2
+    assert similarity.status_code == 200
+    assert similarity.json()["pair_comparisons"] == 1
+    assert sum(similarity.json()["overlap_distribution"]) == 1

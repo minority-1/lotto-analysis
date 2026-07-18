@@ -100,6 +100,11 @@ uvicorn lotto_analysis.api.main:app --reload
 - `GET /api/analysis/basic?recent=20`
 - `GET /api/analysis/compare?recent=50&against_all=false`
 - `GET /api/analysis/gaps?recent=100`
+- `GET /api/analysis/relationships?recent=100&number=1`
+- `GET /api/analysis/matrix?recent=100`
+- `GET /api/analysis/matrix/compare?recent=50`
+- `GET /api/analysis/patterns?recent=100`
+- `GET /api/analysis/similarity?recent=100`
 
 `recent=0`은 전체 범위를 의미합니다. 보유 회차보다 큰 최근 범위는 축소하지 않고 `422`를 반환하며, 데이터베이스 장애는 접속 상세를 숨긴 `503` 응답으로 반환합니다.
 
