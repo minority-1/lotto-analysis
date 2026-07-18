@@ -72,3 +72,33 @@ def test_query_validation_rejects_negative_recent() -> None:
     response = _client().get("/api/draws", params={"recent": -1})
 
     assert response.status_code == 422
+
+
+def test_period_comparison_returns_normalized_rates_and_ranges() -> None:
+    response = _client().get(
+        "/api/analysis/compare", params={"recent": 1, "against_all": False}
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["baseline_start_draw"] == 1
+    assert body["comparison_end_draw"] == 2
+    assert body["baseline_total_draws"] == 1
+    assert body["comparison_total_draws"] == 1
+    assert len(body["numbers"]) == 45
+    assert body["numbers"][0]["baseline_rate"] == 1.0
+    assert body["numbers"][0]["comparison_rate"] == 0.0
+
+
+def test_gap_analysis_returns_all_numbers_and_rejects_too_large_range() -> None:
+    client = _client()
+
+    response = client.get("/api/analysis/gaps", params={"recent": 2})
+    too_many = client.get("/api/analysis/gaps", params={"recent": 3})
+
+    assert response.status_code == 200
+    assert response.json()["start_draw"] == 1
+    assert response.json()["end_draw"] == 2
+    assert len(response.json()["numbers"]) == 45
+    assert response.json()["numbers"][0]["appearance_draws"] == [1]
+    assert too_many.status_code == 422

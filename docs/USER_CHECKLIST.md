@@ -515,6 +515,14 @@ uvicorn lotto_analysis.api.main:app --reload
 * `[완료]` OpenAPI JSON과 자동 API 계약 테스트 4개 통과
 * `[사용자 확인]` Swagger UI에서 위 네 엔드포인트 직접 실행
 
+### 기간 비교·출현 간격 API
+
+* `[완료]` `/api/analysis/compare?recent=50`에서 직전 `1133~1182`, 최근 `1183~1232` 확인
+* `[완료]` 기간 비교 번호 45개와 출현률·순위 변화 응답 확인
+* `[완료]` `/api/analysis/gaps`에서 전체 `1~1232`회, 번호 45개 확인
+* `[완료]` OpenAPI 경로 6개와 API 계약 테스트 6개 확인
+* `[사용자 확인]` Swagger UI에서 `against_all=true` 기간 비교 실행
+
 종료는 Streamlit을 실행한 터미널에서 `Ctrl+C`를 누른다. 화면은 현재 읽기 전용이다.
 
 ## 변경 이력
@@ -552,3 +560,4 @@ uvicorn lotto_analysis.api.main:app --reload
 * 2026-07-17: Streamlit 단일·반복 생성 전략 백테스트 화면 추가.
 * 2026-07-17: Streamlit 내부 분석 도구 1차 범위 마감.
 * 2026-07-18: FastAPI health·회차·대시보드·기본 분석 1차 구조 추가.
+* 2026-07-18: FastAPI 기간 비교와 출현 간격 조회 API 추가.
