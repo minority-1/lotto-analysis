@@ -499,6 +499,22 @@ streamlit run streamlit_app/app.py
 * `[후속]` 사용자 지정 범위, 번호쌍 히트맵, 결과 내보내기
 * `[후속]` 수집·DB 관리 화면
 
+## FastAPI 1차 확인
+
+```bash
+docker compose up -d postgres
+uvicorn lotto_analysis.api.main:app --reload
+```
+
+브라우저에서 `http://127.0.0.1:8000/docs`를 연다.
+
+* `[완료]` `/api/health` 응답 `{"status":"ok"}` 확인
+* `[완료]` `/api/dashboard` 저장 회차 1232, 최신 회차 1232, 누락 0 확인
+* `[완료]` `/api/draws?recent=1`에서 1232회 응답 확인
+* `[완료]` `/api/analysis/basic?recent=20`에서 1213~1232회 분석 확인
+* `[완료]` OpenAPI JSON과 자동 API 계약 테스트 4개 통과
+* `[사용자 확인]` Swagger UI에서 위 네 엔드포인트 직접 실행
+
 종료는 Streamlit을 실행한 터미널에서 `Ctrl+C`를 누른다. 화면은 현재 읽기 전용이다.
 
 ## 변경 이력
@@ -535,3 +551,4 @@ streamlit run streamlit_app/app.py
 * 2026-07-17: Streamlit 과거 조합 유사도와 행렬 기간 차이 화면 추가.
 * 2026-07-17: Streamlit 단일·반복 생성 전략 백테스트 화면 추가.
 * 2026-07-17: Streamlit 내부 분석 도구 1차 범위 마감.
+* 2026-07-18: FastAPI health·회차·대시보드·기본 분석 1차 구조 추가.

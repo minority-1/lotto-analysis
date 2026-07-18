@@ -79,6 +79,28 @@ streamlit run streamlit_app/app.py
 
 과거 조합 유사도와 최근·직전 기간의 7×7 행렬 출현률 차이도 Streamlit에서 확인할 수 있습니다. 사용자 지정 회차·날짜 범위와 번호쌍 전체 히트맵은 후속 분석 UI 범위입니다.
 
+## FastAPI
+
+PostgreSQL 컨테이너를 실행한 상태에서 개발 API 서버를 시작합니다.
+
+```bash
+uvicorn lotto_analysis.api.main:app --reload
+```
+
+기본 주소는 `http://127.0.0.1:8000`이며 OpenAPI 문서는 다음 주소에서 확인합니다.
+
+- Swagger UI: `http://127.0.0.1:8000/docs`
+- ReDoc: `http://127.0.0.1:8000/redoc`
+
+1차 엔드포인트:
+
+- `GET /api/health`
+- `GET /api/draws?recent=20`
+- `GET /api/dashboard`
+- `GET /api/analysis/basic?recent=20`
+
+`recent=0`은 전체 범위를 의미합니다. 보유 회차보다 큰 최근 범위는 축소하지 않고 `422`를 반환하며, 데이터베이스 장애는 접속 상세를 숨긴 `503` 응답으로 반환합니다.
+
 `--recent N`을 사용하는 분석 명령은 보유 회차보다 N이 크면 전체 데이터로 조용히 대체하지 않고 실제 보유 건수를 포함한 오류를 반환합니다.
 
 ## 데이터 수집
