@@ -151,6 +151,19 @@ uvicorn lotto_analysis.api.main:app --reload
 
 Next.js 로컬 개발 origin은 기본적으로 `http://localhost:3000`과 `http://127.0.0.1:3000`을 허용합니다. 다른 origin은 `.env`의 `LOTTO_CORS_ORIGINS`에 쉼표로 구분해 지정합니다. 백테스트는 현재 동기 실행이므로 API 요청 스키마의 실행량 상한을 적용합니다.
 
+## Next.js 사용자 화면
+
+FastAPI를 먼저 실행한 뒤 별도 터미널에서 프런트엔드를 시작합니다. Node.js 20.9 이상과 pnpm이 필요합니다.
+
+```bash
+cd frontend
+cp .env.local.example .env.local
+pnpm install
+pnpm dev
+```
+
+브라우저에서 `http://localhost:3000`을 엽니다. `LOTTO_API_BASE_URL`은 Next.js 서버가 접근할 FastAPI 주소이며 기본값은 `http://127.0.0.1:8000/api`입니다. 첫 화면은 최신 회차, 수집·누락 현황, 최근 8회 기록과 최근 100회 출현 빈도 상위를 표시합니다.
+
 `--recent N`을 사용하는 분석 명령은 보유 회차보다 N이 크면 전체 데이터로 조용히 대체하지 않고 실제 보유 건수를 포함한 오류를 반환합니다.
 
 ## 데이터 수집
