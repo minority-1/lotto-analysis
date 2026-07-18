@@ -142,3 +142,49 @@ def test_matrix_and_similarity_endpoints_preserve_invariants() -> None:
     assert similarity.status_code == 200
     assert similarity.json()["pair_comparisons"] == 1
     assert sum(similarity.json()["overlap_distribution"]) == 1
+
+
+def test_generation_endpoint_is_reproducible_and_returns_characteristics() -> None:
+    client = _client()
+    payload = {
+        "strategy": "uniform",
+        "count": 2,
+        "required_numbers": [20],
+        "excluded_numbers": [21],
+        "seed": 42,
+    }
+
+    first = client.post("/api/combinations/generate", json=payload)
+    second = client.post("/api/combinations/generate", json=payload)
+
+    assert first.status_code == 200
+    assert first.json() == second.json()
+    assert first.json()["complete"] is True
+    assert len(first.json()["combinations"]) == 2
+    assert all(20 in item["numbers"] for item in first.json()["combinations"])
+    assert all(21 not in item["numbers"] for item in first.json()["combinations"])
+    assert "ac_value" in first.json()["combinations"][0]
+
+
+def test_frequency_generation_and_domain_validation_errors() -> None:
+    client = _client()
+    frequency = client.post(
+        "/api/combinations/generate",
+        json={"strategy": "frequency", "weight_recent": 2, "count": 1, "seed": 7},
+    )
+    overlap = client.post(
+        "/api/combinations/generate",
+        json={"required_numbers": [1], "excluded_numbers": [1]},
+    )
+    invalid_weight = client.post(
+        "/api/combinations/generate",
+        json={"strategy": "uniform", "weight_recent": 10},
+    )
+
+    assert frequency.status_code == 200
+    assert frequency.json()["strategy"] == "frequency_weighted"
+    assert frequency.json()["strategy_details"][0] == ["source_draws", "2"]
+    assert overlap.status_code == 422
+    assert "must not overlap" in overlap.json()["detail"]
+    assert invalid_weight.status_code == 422
+    assert "requires the frequency strategy" in invalid_weight.json()["detail"]

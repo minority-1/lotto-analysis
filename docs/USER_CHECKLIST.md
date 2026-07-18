@@ -533,6 +533,15 @@ uvicorn lotto_analysis.api.main:app --reload
 * `[완료]` OpenAPI 경로 11개와 API 계약 테스트 8개 통과
 * `[사용자 확인]` Swagger UI에서 기준 번호를 변경해 관계 분석 실행
 
+### 번호 생성 API
+
+* `[완료]` 균등 무작위·5조합·seed 42 생성 완료 및 같은 응답 재현 확인
+* `[완료]` 최근 50회 빈도 가중·5조합·seed 42 생성 완료
+* `[완료]` `source_draws=50`, smoothing과 cap 정보 응답 확인
+* `[완료]` 잘못된 포함·제외 중복과 전략 조건의 422 응답 확인
+* `[완료]` OpenAPI 경로 12개와 API 계약 테스트 10개 통과
+* `[사용자 확인]` Swagger UI에서 포함·제외 번호와 조건을 바꿔 생성
+
 종료는 Streamlit을 실행한 터미널에서 `Ctrl+C`를 누른다. 화면은 현재 읽기 전용이다.
 
 ## 변경 이력
@@ -572,3 +581,4 @@ uvicorn lotto_analysis.api.main:app --reload
 * 2026-07-18: FastAPI health·회차·대시보드·기본 분석 1차 구조 추가.
 * 2026-07-18: FastAPI 기간 비교와 출현 간격 조회 API 추가.
 * 2026-07-18: FastAPI 관계·행렬·패턴·유사도 고급 분석 API 추가.
+* 2026-07-18: FastAPI 균등·빈도 가중 조건 기반 번호 생성 API 추가.
