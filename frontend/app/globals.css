@@ -202,6 +202,25 @@ footer span { margin: 0 8px; }
 .combination-row strong, .metric-line strong { text-align: right; font-size: 11px; }
 .combination-row small, .metric-line small { color: var(--muted); text-align: right; font-size: 9px; }
 .metric-line span { color: var(--muted); font-size: 11px; }
+.matrix-mode-nav { width: fit-content; gap: 0; margin: -16px 0 34px auto; border-bottom: 1px solid var(--line); }
+.matrix-mode-nav a { padding: 10px 14px 8px; font-size: 11px; }
+.matrix-section { margin-bottom: 34px; }
+.matrix-scroll { overflow-x: auto; }
+.number-matrix { display: grid; grid-template-columns: repeat(7, minmax(82px, 1fr)); gap: 5px; min-width: 604px; }
+.matrix-cell { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; color: white; border: 1px solid rgba(23,32,28,.08); }
+.matrix-cell strong { font: 700 21px Georgia, serif; }
+.matrix-cell span { font-size: 10px; font-weight: 800; }
+.matrix-cell small { font-size: 9px; opacity: .78; }
+.matrix-cell.empty { background: repeating-linear-gradient(135deg, transparent, transparent 5px, rgba(23,32,28,.04) 5px, rgba(23,32,28,.04) 6px); border-color: var(--line); }
+.matrix-cell.comparison.up { background: rgba(25, 92, 70, var(--strength)); }
+.matrix-cell.comparison.down { background: rgba(165, 80, 72, var(--strength)); }
+.matrix-detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+.matrix-diagonals { grid-column: 1 / -1; }
+.total-strip { display: grid; grid-template-columns: repeat(7, 1fr); }
+.total-strip div { min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; border-right: 1px solid var(--line); }
+.total-strip div:last-child { border-right: 0; }
+.total-strip span { color: var(--muted); font-size: 9px; }
+.total-strip strong { font-size: 12px; }
 
 @media (max-width: 850px) {
   nav { display: none; }
@@ -220,6 +239,8 @@ footer span { margin: 0 8px; }
   .gap-grid article:nth-child(3n) { border-right: 1px solid var(--line); }
   .gap-grid article:nth-child(2n) { border-right: 0; }
   .pattern-layout, .relationship-layout { grid-template-columns: 1fr; }
+  .matrix-detail-grid { grid-template-columns: 1fr; }
+  .matrix-diagonals { grid-column: auto; }
 }
 
 @media (max-width: 580px) {
@@ -266,4 +287,5 @@ footer span { margin: 0 8px; }
   .distribution-card, .relationship-card { padding: 20px 14px; }
   .distribution-row { grid-template-columns: 54px 1fr 46px; }
   .distribution-row small { display: none; }
+  .matrix-mode-nav { margin-top: -20px; }
 }

@@ -102,3 +102,33 @@ export type RelationshipAnalysis = {
   lag_overlaps: Array<{ lag: number; compared_draws: number; overlap_distribution: number[]; average_overlap: number }>;
   bonus_followups: Array<{ lag: number; eligible_draws: number; main_appearances: number; appearance_rate: number }>;
 };
+
+export type MatrixCell = {
+  row: number;
+  column: number;
+  number: number | null;
+  count: number;
+  draw_rate: number;
+};
+
+export type MatrixAnalysis = {
+  total_draws: number;
+  start_draw: number;
+  end_draw: number;
+  cells: MatrixCell[];
+  row_totals: number[];
+  column_totals: number[];
+  average_distinct_rows: number;
+  average_distinct_columns: number;
+  diagonals: Array<{ name: string; numbers: number[]; total_appearances: number; draw_count: number; draw_rate: number }>;
+};
+
+export type MatrixComparison = {
+  baseline_start_draw: number;
+  baseline_end_draw: number;
+  comparison_start_draw: number;
+  comparison_end_draw: number;
+  baseline_total_draws: number;
+  comparison_total_draws: number;
+  cells: Array<{ row: number; column: number; number: number | null; baseline_count: number; comparison_count: number; baseline_rate: number; comparison_rate: number; rate_difference: number }>;
+};
