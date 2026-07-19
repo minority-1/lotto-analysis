@@ -10,9 +10,52 @@ async function apiGet<T>(path: string): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(`API request failed with status ${response.status}`);
+    const body = await response.json().catch(() => null) as { detail?: string } | null;
+    throw new Error(body?.detail ?? `API request failed with status ${response.status}`);
   }
   return response.json() as Promise<T>;
+}
+
+type BasicAnalysisQuery = {
+  mode?: string;
+  recent?: string;
+  start_draw?: string;
+  end_draw?: string;
+  start_date?: string;
+  end_date?: string;
+};
+
+export async function getBasicAnalysis(query: BasicAnalysisQuery): Promise<{
+  data: BasicAnalysis | null;
+  error: string | null;
+}> {
+  const mode = query.mode ?? "recent";
+  let path: string;
+  if (mode === "draw") {
+    const parameters = new URLSearchParams({
+      start_draw: query.start_draw ?? "",
+      end_draw: query.end_draw ?? "",
+    });
+    path = `/analysis/basic/range?${parameters}`;
+  } else if (mode === "date") {
+    const parameters = new URLSearchParams({
+      start_date: query.start_date ?? "",
+      end_date: query.end_date ?? "",
+    });
+    path = `/analysis/basic/range?${parameters}`;
+  } else {
+    const recent = query.recent ?? "100";
+    path = `/analysis/basic?recent=${encodeURIComponent(recent)}`;
+  }
+
+  try {
+    return { data: await apiGet<BasicAnalysis>(path), error: null };
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error.message : null,
+    };
+  }
 }
 
 export async function getDashboardData(): Promise<{

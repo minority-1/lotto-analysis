@@ -44,6 +44,8 @@ export type BasicAnalysis = {
     sum_max: number;
     sum_mean: number;
     sum_median: number;
+    sum_standard_deviation: number;
+    consecutive_draw_count: number;
     consecutive_draw_rate: number;
   };
 };

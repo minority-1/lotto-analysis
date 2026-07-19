@@ -18,7 +18,7 @@ export function SiteHeader({ active }: SiteHeaderProps) {
         <Link className={active === "draws" ? "active" : ""} href="/draws">
           회차
         </Link>
-        <Link className={active === "analysis" ? "active" : ""} href="/#frequency">
+        <Link className={active === "analysis" ? "active" : ""} href="/analysis">
           분석
         </Link>
       </nav>
