@@ -62,3 +62,43 @@ export type GapAnalysis = {
   total_draws: number; start_draw: number; end_draw: number;
   numbers: Array<{ number: number; appearance_draws: number[]; gaps: number[]; mean_gap: number | null; median_gap: number | null; minimum_gap: number | null; maximum_gap: number | null; latest_gap: number | null; current_absence: number; gap_standard_deviation: number | null }>;
 };
+
+export type ValueFrequency = { value: number; count: number; rate: number };
+
+export type PatternAnalysis = {
+  total_draws: number;
+  start_draw: number;
+  end_draw: number;
+  ac_distribution: ValueFrequency[];
+  gap_distribution: ValueFrequency[];
+  prime_count_distribution: ValueFrequency[];
+  composite_count_distribution: ValueFrequency[];
+  square_count_distribution: ValueFrequency[];
+  sum_band_distribution: Array<{ minimum: number; maximum: number; count: number; draw_rate: number }>;
+  last_digit_sum_minimum: number;
+  last_digit_sum_maximum: number;
+  last_digit_sum_mean: number;
+};
+
+type CombinationFrequency = { numbers: number[]; count: number; draw_rate: number };
+
+export type RelationshipAnalysis = {
+  total_draws: number;
+  start_draw: number;
+  end_draw: number;
+  pairs: CombinationFrequency[];
+  triples: CombinationFrequency[];
+  anchor_number: number | null;
+  anchor_appearance_count: number;
+  companions: Array<{ number: number; count: number; conditional_rate: number }>;
+  distances: Array<{ distance: number; count: number; observation_rate: number }>;
+  adjacent_pair_count: number;
+  adjacent_draw_count: number;
+  adjacent_draw_rate: number;
+  same_last_digit_pair_count: number;
+  same_last_digit_draw_count: number;
+  same_last_digit_draw_rate: number;
+  consecutive_groups: CombinationFrequency[];
+  lag_overlaps: Array<{ lag: number; compared_draws: number; overlap_distribution: number[]; average_overlap: number }>;
+  bonus_followups: Array<{ lag: number; eligible_draws: number; main_appearances: number; appearance_rate: number }>;
+};
