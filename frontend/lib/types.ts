@@ -49,3 +49,16 @@ export type BasicAnalysis = {
     consecutive_draw_rate: number;
   };
 };
+
+export type PeriodComparison = {
+  baseline_label: string; comparison_label: string;
+  baseline_start_draw: number; baseline_end_draw: number;
+  comparison_start_draw: number; comparison_end_draw: number;
+  baseline_total_draws: number; comparison_total_draws: number;
+  numbers: Array<{ number: number; baseline_count: number; comparison_count: number; baseline_rate: number; comparison_rate: number; rate_difference: number; baseline_rank: number; comparison_rank: number; rank_change: number }>;
+};
+
+export type GapAnalysis = {
+  total_draws: number; start_draw: number; end_draw: number;
+  numbers: Array<{ number: number; appearance_draws: number[]; gaps: number[]; mean_gap: number | null; median_gap: number | null; minimum_gap: number | null; maximum_gap: number | null; latest_gap: number | null; current_absence: number; gap_standard_deviation: number | null }>;
+};

@@ -1,4 +1,4 @@
-import type { BasicAnalysis, Dashboard, DrawPage, LottoDraw } from "@/lib/types";
+import type { BasicAnalysis, Dashboard, DrawPage, GapAnalysis, LottoDraw, PeriodComparison } from "@/lib/types";
 
 const API_BASE_URL =
   process.env.LOTTO_API_BASE_URL ?? "http://127.0.0.1:8000/api";
@@ -56,6 +56,19 @@ export async function getBasicAnalysis(query: BasicAnalysisQuery): Promise<{
       error: error instanceof Error ? error.message : null,
     };
   }
+}
+
+async function analysisGet<T>(path: string): Promise<{ data: T | null; error: string | null }> {
+  try { return { data: await apiGet<T>(path), error: null }; }
+  catch (error) { return { data: null, error: error instanceof Error ? error.message : null }; }
+}
+
+export function getPeriodComparison(recent: string, againstAll: boolean) {
+  return analysisGet<PeriodComparison>(`/analysis/compare?recent=${encodeURIComponent(recent)}&against_all=${againstAll}`);
+}
+
+export function getGapAnalysis(recent: string) {
+  return analysisGet<GapAnalysis>(`/analysis/gaps?recent=${encodeURIComponent(recent)}`);
 }
 
 export async function getDashboardData(): Promise<{

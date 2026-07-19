@@ -1,4 +1,5 @@
 import { LottoBall } from "@/components/lotto-ball";
+import { AnalysisNav } from "@/components/analysis-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getBasicAnalysis } from "@/lib/api";
@@ -30,6 +31,7 @@ export default async function AnalysisPage({ searchParams }: AnalysisPageProps) 
       </section>
 
       <section className="content analysis-page">
+        <AnalysisNav active="basic" />
         <RangeControls query={query} />
         {result.data ? <AnalysisResult data={result.data} /> : <AnalysisError message={result.error} />}
       </section>
