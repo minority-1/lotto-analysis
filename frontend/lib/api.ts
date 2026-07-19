@@ -1,4 +1,4 @@
-import type { BasicAnalysis, Dashboard, DrawPage, GapAnalysis, LottoDraw, MatrixAnalysis, MatrixComparison, PatternAnalysis, PeriodComparison, RelationshipAnalysis, SimilarityAnalysis } from "@/lib/types";
+import type { BasicAnalysis, Dashboard, DrawPage, GapAnalysis, GenerationRequest, GenerationResponse, LottoDraw, MatrixAnalysis, MatrixComparison, PatternAnalysis, PeriodComparison, RelationshipAnalysis, SimilarityAnalysis } from "@/lib/types";
 
 const API_BASE_URL =
   process.env.LOTTO_API_BASE_URL ?? "http://127.0.0.1:8000/api";
@@ -12,6 +12,23 @@ async function apiGet<T>(path: string): Promise<T> {
   if (!response.ok) {
     const body = await response.json().catch(() => null) as { detail?: string } | null;
     throw new Error(body?.detail ?? `API request failed with status ${response.status}`);
+  }
+  return response.json() as Promise<T>;
+}
+
+async function apiPost<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: "POST",
+    cache: "no-store",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const responseBody = await response.json().catch(() => null) as { detail?: string | Array<{ msg?: string }> } | null;
+    const detail = Array.isArray(responseBody?.detail)
+      ? responseBody.detail.map((item) => item.msg).filter(Boolean).join(", ")
+      : responseBody?.detail;
+    throw new Error(detail || `API request failed with status ${response.status}`);
   }
   return response.json() as Promise<T>;
 }
@@ -90,6 +107,10 @@ export function getMatrixComparison(recent: string) {
 
 export function getSimilarityAnalysis(recent: string) {
   return analysisGet<SimilarityAnalysis>(`/analysis/similarity?recent=${encodeURIComponent(recent)}`);
+}
+
+export function generateCombinations(request: GenerationRequest) {
+  return apiPost<GenerationResponse>("/combinations/generate", request);
 }
 
 export async function getDashboardData(): Promise<{

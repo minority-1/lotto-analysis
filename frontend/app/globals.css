@@ -239,6 +239,49 @@ footer span { margin: 0 8px; }
 .similar-draw-links { display: flex; flex-wrap: wrap; gap: 5px; }
 .similar-draw-links a { padding: 4px 6px; border: 1px solid var(--line); color: var(--muted); font-size: 9px; }
 .similar-draw-links a:hover { color: var(--green); border-color: var(--green); }
+.generate-hero { background: radial-gradient(circle at 80% 40%, rgba(200,240,74,.38), transparent 24%), linear-gradient(120deg, var(--paper), #e4ead6); }
+.generate-page { max-width: 980px; }
+.generator-form, .generation-result { padding: 34px; border: 1px solid var(--line); background: var(--card); box-shadow: 0 8px 30px rgba(33,48,40,.04); }
+.generator-intro { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+.generator-intro h2 { margin: 8px 0 0; font: 700 30px Georgia, serif; }
+.generator-intro p { margin: 0; color: var(--muted); font-size: 11px; }
+.generator-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+.generator-field { display: flex; flex-direction: column; gap: 8px; }
+.generator-field > span, .condition-grid legend { color: var(--muted); font-size: 11px; }
+.generator-field input, .generator-field select, .condition-grid input { width: 100%; height: 42px; padding: 0 11px; border: 1px solid var(--line); border-radius: 0; color: var(--ink); background: white; font: inherit; font-size: 12px; }
+.generator-field small { color: var(--muted); font-size: 9px; }
+.advanced-conditions { margin-top: 26px; border: 1px solid var(--line); }
+.advanced-conditions > summary { padding: 16px 18px; color: var(--green); cursor: pointer; font-size: 12px; font-weight: 800; }
+.condition-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 22px; border-top: 1px solid var(--line); }
+.condition-grid fieldset { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 0; padding: 0; border: 0; }
+.condition-grid legend { grid-column: 1 / -1; margin-bottom: 8px; }
+.condition-grid fieldset label { display: flex; flex-direction: column; gap: 6px; }
+.condition-grid fieldset span { color: var(--muted); font-size: 9px; }
+.checkbox-field { grid-column: span 2; display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 11px; }
+.checkbox-field input { width: 16px; height: 16px; }
+.generator-warning { margin: 18px 0; color: var(--muted); font-size: 10px; }
+.generate-button { width: 100%; height: 52px; border: 0; color: #efffcc; background: var(--green); cursor: pointer; font-size: 13px; font-weight: 800; }
+.generate-button:hover { color: var(--green); background: var(--lime); }
+.generate-button:disabled { opacity: .65; cursor: wait; }
+.generation-error { margin-top: 20px; padding: 20px 24px; border-left: 3px solid #a55048; background: #f1e5e1; }
+.generation-error p { margin: 7px 0 0; color: var(--muted); font-size: 12px; }
+.generation-result { margin-top: 30px; }
+.generation-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.generation-meta span { padding: 8px 11px; border: 1px solid var(--line); color: var(--muted); font-size: 10px; }
+.generation-meta strong { color: var(--ink); }
+.partial-message { padding: 13px; color: #8d4d46; background: #f1e5e1; font-size: 11px; }
+.generated-list { border-top: 2px solid var(--ink); }
+.generated-list article { min-height: 112px; display: grid; grid-template-columns: 44px 1fr 280px; align-items: center; gap: 20px; padding: 18px 8px; border-bottom: 1px solid var(--line); }
+.candidate-index { color: var(--muted); font: 10px monospace; }
+.generated-list .lotto-ball { width: 40px; height: 40px; font-size: 12px; }
+.generated-list dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 0; }
+.generated-list dl div { display: flex; flex-direction: column; gap: 3px; }
+.generated-list dt { color: var(--muted); font-size: 8px; }
+.generated-list dd { margin: 0; font-size: 11px; font-weight: 800; }
+.rejection-details { margin-top: 22px; border: 1px solid var(--line); }
+.rejection-details summary { padding: 13px 16px; color: var(--muted); cursor: pointer; font-size: 11px; }
+.rejection-details > div { display: flex; flex-wrap: wrap; gap: 7px; padding: 15px; border-top: 1px solid var(--line); }
+.rejection-details span { padding: 6px 8px; background: #ecebe3; color: var(--muted); font-size: 9px; }
 
 @media (max-width: 850px) {
   nav { display: none; }
@@ -260,6 +303,9 @@ footer span { margin: 0 8px; }
   .matrix-detail-grid { grid-template-columns: 1fr; }
   .matrix-diagonals { grid-column: auto; }
   .similarity-layout { grid-template-columns: 1fr; }
+  .condition-grid { grid-template-columns: repeat(2, 1fr); }
+  .generated-list article { grid-template-columns: 35px 1fr; }
+  .generated-list dl { grid-column: 2; }
 }
 
 @media (max-width: 580px) {
@@ -311,4 +357,12 @@ footer span { margin: 0 8px; }
   .similarity-table article > small { display: none; }
   .overlap-row { grid-template-columns: 58px 1fr 65px; }
   .overlap-row small { display: none; }
+  .generator-form, .generation-result { padding: 24px 18px; }
+  .generator-intro { align-items: flex-start; flex-direction: column; }
+  .generator-grid, .condition-grid { grid-template-columns: 1fr; }
+  .checkbox-field { grid-column: auto; }
+  .generated-list article { grid-template-columns: 1fr; }
+  .candidate-index, .generated-list dl { grid-column: auto; }
+  .generated-list .draw-numbers { gap: 6px; }
+  .generated-list .lotto-ball { width: 37px; height: 37px; }
 }

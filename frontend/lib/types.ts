@@ -153,3 +153,53 @@ export type SimilarityAnalysis = {
   overlap_distribution: number[];
   draws: DrawSimilarity[];
 };
+
+export type GenerationRequest = {
+  strategy: "uniform" | "frequency";
+  weight_recent: number;
+  count: number;
+  required_numbers: number[];
+  excluded_numbers: number[];
+  odd_minimum: number;
+  odd_maximum: number;
+  low_minimum: number;
+  low_maximum: number;
+  sum_minimum: number;
+  sum_maximum: number;
+  prime_minimum: number;
+  prime_maximum: number;
+  ac_minimum: number;
+  ac_maximum: number;
+  maximum_consecutive_pairs: number;
+  exclude_exact_historical: boolean;
+  maximum_historical_overlap: number;
+  maximum_result_overlap: number;
+  maximum_attempts: number;
+  seed: number | null;
+};
+
+export type GeneratedCombination = {
+  numbers: [number, number, number, number, number, number];
+  odd_count: number;
+  even_count: number;
+  low_count: number;
+  high_count: number;
+  number_sum: number;
+  prime_count: number;
+  ac_value: number;
+  consecutive_pair_count: number;
+  maximum_historical_overlap: number;
+};
+
+export type GenerationResponse = {
+  strategy: string;
+  strategy_details: Array<[string, string]>;
+  requested_count: number;
+  combinations: GeneratedCombination[];
+  attempts: number;
+  maximum_attempts: number;
+  rejection_counts: Array<[string, number]>;
+  seed: number | null;
+  complete: boolean;
+  message: string | null;
+};
