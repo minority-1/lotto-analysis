@@ -221,6 +221,24 @@ footer span { margin: 0 8px; }
 .total-strip div:last-child { border-right: 0; }
 .total-strip span { color: var(--muted); font-size: 9px; }
 .total-strip strong { font-size: 12px; }
+.similarity-layout { display: grid; grid-template-columns: .78fr 1.22fr; gap: 40px; align-items: start; }
+.similarity-distribution { padding: 24px; border: 1px solid var(--line); background: var(--card); }
+.overlap-row { min-height: 44px; display: grid; grid-template-columns: 64px 1fr 72px 52px; align-items: center; gap: 10px; }
+.overlap-row > span { color: var(--muted); font-size: 10px; }
+.overlap-row > i { height: 8px; overflow: hidden; background: #e5e6df; }
+.overlap-row > i b { display: block; height: 100%; background: var(--green); }
+.overlap-row strong { text-align: right; font-size: 11px; }
+.overlap-row small { color: var(--muted); text-align: right; font-size: 9px; }
+.similarity-table { border-top: 2px solid var(--ink); }
+.similarity-table article { min-height: 67px; display: grid; grid-template-columns: 70px 100px 1fr 84px; align-items: center; gap: 12px; padding: 10px 8px; border-bottom: 1px solid var(--line); }
+.similarity-table article > a { color: var(--green); }
+.similarity-table article > div:nth-child(2) { display: flex; flex-direction: column; gap: 4px; }
+.similarity-table article span { font-size: 11px; font-weight: 800; }
+.similarity-table article small { color: var(--muted); font-size: 9px; }
+.similarity-table article > small { text-align: right; }
+.similar-draw-links { display: flex; flex-wrap: wrap; gap: 5px; }
+.similar-draw-links a { padding: 4px 6px; border: 1px solid var(--line); color: var(--muted); font-size: 9px; }
+.similar-draw-links a:hover { color: var(--green); border-color: var(--green); }
 
 @media (max-width: 850px) {
   nav { display: none; }
@@ -241,6 +259,7 @@ footer span { margin: 0 8px; }
   .pattern-layout, .relationship-layout { grid-template-columns: 1fr; }
   .matrix-detail-grid { grid-template-columns: 1fr; }
   .matrix-diagonals { grid-column: auto; }
+  .similarity-layout { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 580px) {
@@ -288,4 +307,8 @@ footer span { margin: 0 8px; }
   .distribution-row { grid-template-columns: 54px 1fr 46px; }
   .distribution-row small { display: none; }
   .matrix-mode-nav { margin-top: -20px; }
+  .similarity-table article { grid-template-columns: 60px 88px 1fr; }
+  .similarity-table article > small { display: none; }
+  .overlap-row { grid-template-columns: 58px 1fr 65px; }
+  .overlap-row small { display: none; }
 }

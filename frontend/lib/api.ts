@@ -1,4 +1,4 @@
-import type { BasicAnalysis, Dashboard, DrawPage, GapAnalysis, LottoDraw, MatrixAnalysis, MatrixComparison, PatternAnalysis, PeriodComparison, RelationshipAnalysis } from "@/lib/types";
+import type { BasicAnalysis, Dashboard, DrawPage, GapAnalysis, LottoDraw, MatrixAnalysis, MatrixComparison, PatternAnalysis, PeriodComparison, RelationshipAnalysis, SimilarityAnalysis } from "@/lib/types";
 
 const API_BASE_URL =
   process.env.LOTTO_API_BASE_URL ?? "http://127.0.0.1:8000/api";
@@ -86,6 +86,10 @@ export function getMatrixAnalysis(recent: string) {
 
 export function getMatrixComparison(recent: string) {
   return analysisGet<MatrixComparison>(`/analysis/matrix/compare?recent=${encodeURIComponent(recent)}`);
+}
+
+export function getSimilarityAnalysis(recent: string) {
+  return analysisGet<SimilarityAnalysis>(`/analysis/similarity?recent=${encodeURIComponent(recent)}`);
 }
 
 export async function getDashboardData(): Promise<{

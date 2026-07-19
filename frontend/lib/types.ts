@@ -132,3 +132,24 @@ export type MatrixComparison = {
   comparison_total_draws: number;
   cells: Array<{ row: number; column: number; number: number | null; baseline_count: number; comparison_count: number; baseline_rate: number; comparison_rate: number; rate_difference: number }>;
 };
+
+export type DrawSimilarity = {
+  draw_number: number;
+  compared_draws: number;
+  maximum_overlap: number;
+  most_similar_draws: number[];
+  maximum_jaccard: number | null;
+  overlap_3_count: number;
+  overlap_4_count: number;
+  overlap_5_count: number;
+  overlap_6_count: number;
+};
+
+export type SimilarityAnalysis = {
+  total_draws: number;
+  start_draw: number;
+  end_draw: number;
+  pair_comparisons: number;
+  overlap_distribution: number[];
+  draws: DrawSimilarity[];
+};
