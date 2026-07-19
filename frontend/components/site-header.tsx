@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 type SiteHeaderProps = {
-  active: "dashboard" | "draws" | "analysis" | "generate";
+  active: "dashboard" | "draws" | "analysis" | "generate" | "backtests";
 };
 
 export function SiteHeader({ active }: SiteHeaderProps) {
@@ -23,6 +23,9 @@ export function SiteHeader({ active }: SiteHeaderProps) {
         </Link>
         <Link className={active === "generate" ? "active" : ""} href="/generate">
           번호 생성
+        </Link>
+        <Link className={active === "backtests" ? "active" : ""} href="/backtests">
+          백테스트
         </Link>
       </nav>
       <span className="status"><i /> API 연결됨</span>

@@ -203,3 +203,41 @@ export type GenerationResponse = {
   complete: boolean;
   message: string | null;
 };
+
+export type BacktestRequest = {
+  strategy: "uniform" | "frequency";
+  target_count: number;
+  combinations_per_target: number;
+  base_seed: number;
+  weight_recent: number;
+  maximum_attempts: number;
+};
+
+export type BacktestTarget = {
+  target_draw_number: number;
+  training_start_draw: number;
+  training_end_draw: number;
+  training_draws: number;
+  actual_numbers: [number, number, number, number, number, number];
+  actual_bonus_number: number;
+  seed: number;
+  requested_combinations: number;
+  generated_combinations: number;
+  attempts: number;
+  complete: boolean;
+  best_main_match: number;
+};
+
+export type BacktestResponse = {
+  strategy: string;
+  target_count: number;
+  combinations_per_target: number;
+  base_seed: number;
+  weight_recent: number;
+  total_generated_combinations: number;
+  complete_targets: number;
+  main_match_distribution: number[];
+  best_match_distribution: number[];
+  bonus_match_count: number;
+  targets: BacktestTarget[];
+};

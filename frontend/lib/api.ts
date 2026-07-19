@@ -1,4 +1,4 @@
-import type { BasicAnalysis, Dashboard, DrawPage, GapAnalysis, GenerationRequest, GenerationResponse, LottoDraw, MatrixAnalysis, MatrixComparison, PatternAnalysis, PeriodComparison, RelationshipAnalysis, SimilarityAnalysis } from "@/lib/types";
+import type { BacktestRequest, BacktestResponse, BasicAnalysis, Dashboard, DrawPage, GapAnalysis, GenerationRequest, GenerationResponse, LottoDraw, MatrixAnalysis, MatrixComparison, PatternAnalysis, PeriodComparison, RelationshipAnalysis, SimilarityAnalysis } from "@/lib/types";
 
 const API_BASE_URL =
   process.env.LOTTO_API_BASE_URL ?? "http://127.0.0.1:8000/api";
@@ -111,6 +111,10 @@ export function getSimilarityAnalysis(recent: string) {
 
 export function generateCombinations(request: GenerationRequest) {
   return apiPost<GenerationResponse>("/combinations/generate", request);
+}
+
+export function runBacktest(request: BacktestRequest) {
+  return apiPost<BacktestResponse>("/backtests/run", request);
 }
 
 export async function getDashboardData(): Promise<{
