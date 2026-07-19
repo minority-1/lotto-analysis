@@ -1,4 +1,4 @@
-import type { BasicAnalysis, Dashboard, LottoDraw } from "@/lib/types";
+import type { BasicAnalysis, Dashboard, DrawPage, LottoDraw } from "@/lib/types";
 
 const API_BASE_URL =
   process.env.LOTTO_API_BASE_URL ?? "http://127.0.0.1:8000/api";
@@ -26,4 +26,47 @@ export async function getDashboardData(): Promise<{
     apiGet<BasicAnalysis>("/analysis/basic?recent=100"),
   ]);
   return { dashboard, draws, analysis };
+}
+
+export async function getDrawPage(page: number, pageSize: number): Promise<{
+  draws: LottoDraw[];
+  page: number;
+  total: number;
+  totalPages: number;
+} | null> {
+  try {
+    const dashboard = await apiGet<Dashboard>("/dashboard");
+    const totalPages = Math.max(1, Math.ceil(dashboard.total_draws / pageSize));
+    const normalizedPage = Math.min(page, totalPages);
+    if (dashboard.total_draws === 0) {
+      return { draws: [], page: 1, total: 0, totalPages: 1 };
+    }
+    const remaining = dashboard.total_draws - (normalizedPage - 1) * pageSize;
+    const limit = Math.min(pageSize, remaining);
+    const offset = Math.max(dashboard.total_draws - normalizedPage * pageSize, 0);
+    const response = await apiGet<DrawPage>(`/draws/page?limit=${limit}&offset=${offset}`);
+    return {
+      draws: [...response.items].reverse(),
+      page: normalizedPage,
+      total: response.total,
+      totalPages,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function getDrawDetail(drawNumber: number): Promise<{
+  draw: LottoDraw;
+  latestDrawNumber: number;
+} | null> {
+  try {
+    const [draw, latest] = await Promise.all([
+      apiGet<LottoDraw>(`/draws/${drawNumber}`),
+      apiGet<LottoDraw>("/draws/latest"),
+    ]);
+    return { draw, latestDrawNumber: latest.draw_number };
+  } catch {
+    return null;
+  }
 }

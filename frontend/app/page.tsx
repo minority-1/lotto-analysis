@@ -1,5 +1,7 @@
 import { DrawNumbers } from "@/components/draw-numbers";
 import { LottoBall } from "@/components/lotto-ball";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
 import { getDashboardData } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
@@ -20,26 +22,15 @@ export default async function Home() {
     return <OfflineState />;
   }
 
-    const { dashboard, draws, analysis } = data;
-    const latest = dashboard.latest_draw;
-    const hotNumbers = [...analysis.number_statistics]
-      .sort((left, right) => right.main_count - left.main_count || left.number - right.number)
-      .slice(0, 8);
+  const { dashboard, draws, analysis } = data;
+  const latest = dashboard.latest_draw;
+  const hotNumbers = [...analysis.number_statistics]
+    .sort((left, right) => right.main_count - left.main_count || left.number - right.number)
+    .slice(0, 8);
 
-    return (
+  return (
       <main>
-        <header className="topbar">
-          <a className="brand" href="#top" aria-label="Lotto Lab 홈">
-            <span className="brand-mark">L</span>
-            <span>LOTTO LAB</span>
-          </a>
-          <nav aria-label="주요 메뉴">
-            <a className="active" href="#overview">대시보드</a>
-            <a href="#draws">회차</a>
-            <a href="#frequency">분석</a>
-          </nav>
-          <span className="status"><i /> API 연결됨</span>
-        </header>
+        <SiteHeader active="dashboard" />
 
         <section className="hero" id="top">
           <div className="eyebrow">KOREAN LOTTO 6/45 · DATA ARCHIVE</div>
@@ -110,9 +101,9 @@ export default async function Home() {
           </article>
         </section>
 
-        <footer>LOTTO LAB <span>·</span> DATA, NOT PREDICTION <span>·</span> {new Date().getFullYear()}</footer>
+        <SiteFooter />
       </main>
-    );
+  );
 }
 
 function OfflineState() {
