@@ -28,7 +28,7 @@ export function SiteHeader({ active }: SiteHeaderProps) {
           백테스트
         </Link>
       </nav>
-      <span className="status"><i /> API 연결됨</span>
+      <span className="status">FASTAPI 연동</span>
     </header>
   );
 }

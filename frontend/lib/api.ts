@@ -3,6 +3,12 @@ import type { BacktestExperimentRequest, BacktestExperimentResponse, BacktestReq
 const API_BASE_URL =
   process.env.LOTTO_API_BASE_URL ?? "http://127.0.0.1:8000/api";
 
+class ApiError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+  }
+}
+
 async function apiGet<T>(path: string): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     cache: "no-store",
@@ -11,7 +17,7 @@ async function apiGet<T>(path: string): Promise<T> {
 
   if (!response.ok) {
     const body = await response.json().catch(() => null) as { detail?: string } | null;
-    throw new Error(body?.detail ?? `API request failed with status ${response.status}`);
+    throw new ApiError(body?.detail ?? `API request failed with status ${response.status}`, response.status);
   }
   return response.json() as Promise<T>;
 }
@@ -162,17 +168,20 @@ export async function getDrawPage(page: number, pageSize: number): Promise<{
   }
 }
 
-export async function getDrawDetail(drawNumber: number): Promise<{
-  draw: LottoDraw;
-  latestDrawNumber: number;
-} | null> {
+export async function getDrawDetail(drawNumber: number): Promise<
+  | { status: "ok"; draw: LottoDraw; latestDrawNumber: number }
+  | { status: "not_found" }
+  | { status: "unavailable" }
+> {
   try {
     const [draw, latest] = await Promise.all([
       apiGet<LottoDraw>(`/draws/${drawNumber}`),
       apiGet<LottoDraw>("/draws/latest"),
     ]);
-    return { draw, latestDrawNumber: latest.draw_number };
-  } catch {
-    return null;
+    return { status: "ok", draw, latestDrawNumber: latest.draw_number };
+  } catch (error) {
+    return error instanceof ApiError && error.status === 404
+      ? { status: "not_found" }
+      : { status: "unavailable" };
   }
 }

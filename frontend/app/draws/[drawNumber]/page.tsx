@@ -20,9 +20,10 @@ export default async function DrawDetailPage({ params }: DrawDetailPageProps) {
   }
 
   const result = await getDrawDetail(drawNumber);
-  if (!result) {
+  if (result.status === "not_found") {
     notFound();
   }
+  if (result.status === "unavailable") return <DrawDetailOffline />;
   const { draw, latestDrawNumber } = result;
 
   return (
@@ -57,4 +58,8 @@ export default async function DrawDetailPage({ params }: DrawDetailPageProps) {
       <SiteFooter />
     </main>
   );
+}
+
+function DrawDetailOffline() {
+  return <main><SiteHeader active="draws" /><section className="offline-inline"><p className="eyebrow">API CONNECTION REQUIRED</p><h1>회차 상세를 불러오지 못했습니다.</h1><p>FastAPI와 PostgreSQL 실행 상태를 확인한 뒤 새로고침해 주세요.</p><Link className="primary-link" href="/draws">회차 목록으로</Link></section><SiteFooter /></main>;
 }
