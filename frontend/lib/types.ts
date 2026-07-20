@@ -241,3 +241,34 @@ export type BacktestResponse = {
   bonus_match_count: number;
   targets: BacktestTarget[];
 };
+
+export type BacktestExperimentRequest = {
+  target_count: number;
+  combination_counts: number[];
+  seeds: number[];
+  frequency_recent: number;
+  maximum_attempts: number;
+};
+
+export type BacktestExperimentSummary = {
+  strategy_label: string;
+  strategy: string;
+  weight_recent: number;
+  combinations_per_target: number;
+  run_count: number;
+  complete_runs: number;
+  total_generated_combinations: number;
+  main_match_distribution: number[];
+  best_match_distribution: number[];
+  bonus_match_count: number;
+  average_main_match: number;
+  average_best_match: number;
+};
+
+export type BacktestExperimentResponse = {
+  target_count: number;
+  seeds: number[];
+  combination_counts: number[];
+  frequency_recent: number;
+  summaries: BacktestExperimentSummary[];
+};

@@ -314,6 +314,31 @@ footer span { margin: 0 8px; }
 .backtest-targets dl div { display: flex; flex-direction: column; gap: 4px; }
 .backtest-targets dt { color: var(--muted); font-size: 8px; }
 .backtest-targets dd { margin: 0; font-size: 10px; font-weight: 800; }
+.backtest-mode-nav { width: fit-content; gap: 0; margin: -40px 0 30px; border: 1px solid var(--line); background: var(--card); }
+.backtest-mode-nav a { padding: 13px 20px 11px; font-size: 11px; }
+.experiment-form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.experiment-form-grid label { display: flex; flex-direction: column; gap: 8px; }
+.experiment-form-grid label > span { color: var(--muted); font-size: 11px; }
+.experiment-form-grid input, .experiment-form-grid select { width: 100%; height: 42px; padding: 0 11px; border: 1px solid var(--line); background: white; font: inherit; font-size: 12px; }
+.experiment-form-grid small { color: var(--muted); font-size: 9px; }
+.experiment-group { margin: 50px 0; }
+.experiment-table { border-top: 2px solid var(--ink); }
+.experiment-table-head, .experiment-table > article { display: grid; grid-template-columns: 1.2fr 90px 1fr 70px 90px; align-items: center; gap: 16px; }
+.experiment-table-head { min-height: 42px; padding: 0 14px; color: var(--muted); border-bottom: 1px solid var(--line); font-size: 9px; }
+.experiment-table > article { min-height: 78px; padding: 13px 14px; border-bottom: 1px solid var(--line); }
+.experiment-table > article > div:first-child { display: flex; flex-direction: column; gap: 5px; }
+.experiment-table > article > div:first-child strong { font-size: 12px; }
+.experiment-table > article > div:first-child small { color: var(--muted); font-size: 9px; }
+.experiment-table > article > span { text-align: right; font-size: 11px; }
+.best-average { display: grid; grid-template-columns: 1fr 42px; align-items: center; gap: 8px; }
+.best-average i { height: 7px; background: #e5e6df; }
+.best-average i b { display: block; height: 100%; background: var(--green); }
+.best-average strong { text-align: right; font-size: 11px; }
+.experiment-table details { grid-column: 1 / -1; }
+.experiment-table details summary { color: var(--green); cursor: pointer; font-size: 9px; }
+.experiment-distributions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 10px; padding: 13px; background: #ecebe3; }
+.experiment-distributions strong { font-size: 10px; }
+.experiment-distributions p { margin: 6px 0 0; color: var(--muted); font-size: 9px; line-height: 1.6; }
 
 @media (max-width: 850px) {
   nav { display: none; }
@@ -339,6 +364,7 @@ footer span { margin: 0 8px; }
   .generated-list article { grid-template-columns: 35px 1fr; }
   .generated-list dl { grid-column: 2; }
   .backtest-form-grid { grid-template-columns: repeat(2, 1fr); }
+  .experiment-form-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 580px) {
@@ -402,4 +428,14 @@ footer span { margin: 0 8px; }
   .backtest-form-grid, .backtest-distributions, .backtest-targets { grid-template-columns: 1fr; }
   .backtest-targets > article { border-right: 0; }
   .backtest-targets dl { grid-template-columns: repeat(2, 1fr); }
+  .backtest-mode-nav { margin-top: -52px; }
+  .experiment-form-grid { grid-template-columns: 1fr; }
+  .experiment-table-head { display: none; }
+  .experiment-table > article { grid-template-columns: 1fr 70px; gap: 10px; }
+  .experiment-table > article > div:first-child { grid-column: 1 / -1; }
+  .best-average { grid-column: 1 / -1; }
+  .experiment-table > article > span:nth-of-type(1)::before { content: "평균 일치 "; color: var(--muted); font-size: 8px; }
+  .experiment-table > article > span:nth-of-type(2)::before { content: "완료 "; color: var(--muted); font-size: 8px; }
+  .experiment-table > article > span:nth-of-type(3)::before { content: "생성 "; color: var(--muted); font-size: 8px; }
+  .experiment-distributions { grid-template-columns: 1fr; }
 }
