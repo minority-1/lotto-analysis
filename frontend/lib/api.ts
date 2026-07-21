@@ -1,7 +1,18 @@
 import type { BacktestExperimentRequest, BacktestExperimentResponse, BacktestRequest, BacktestResponse, BasicAnalysis, Dashboard, DrawPage, GapAnalysis, GenerationRequest, GenerationResponse, LottoDraw, MatrixAnalysis, MatrixComparison, PatternAnalysis, PeriodComparison, RelationshipAnalysis, SimilarityAnalysis } from "@/lib/types";
+import { randomUUID } from "node:crypto";
+
+import { logApiFailure } from "@/lib/server-logger";
 
 const API_BASE_URL =
   process.env.LOTTO_API_BASE_URL ?? "http://127.0.0.1:8000/api";
+const DEFAULT_TIMEOUT_MS = 10_000;
+
+function apiTimeoutMs(): number {
+  const configured = Number(process.env.LOTTO_API_TIMEOUT_MS ?? DEFAULT_TIMEOUT_MS);
+  return Number.isInteger(configured) && configured >= 100 && configured <= 120_000
+    ? configured
+    : DEFAULT_TIMEOUT_MS;
+}
 
 class ApiError extends Error {
   constructor(message: string, readonly status: number) {
@@ -9,34 +20,59 @@ class ApiError extends Error {
   }
 }
 
-async function apiGet<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    cache: "no-store",
-    headers: { Accept: "application/json" },
-  });
-
-  if (!response.ok) {
-    const body = await response.json().catch(() => null) as { detail?: string } | null;
-    throw new ApiError(body?.detail ?? `API request failed with status ${response.status}`, response.status);
-  }
-  return response.json() as Promise<T>;
+async function apiGet<T>(path: string, requestId?: string): Promise<T> {
+  return apiRequest<T>("GET", path, undefined, requestId);
 }
 
 async function apiPost<T>(path: string, body: unknown): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method: "POST",
-    cache: "no-store",
-    headers: { Accept: "application/json", "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!response.ok) {
-    const responseBody = await response.json().catch(() => null) as { detail?: string | Array<{ msg?: string }> } | null;
-    const detail = Array.isArray(responseBody?.detail)
-      ? responseBody.detail.map((item) => item.msg).filter(Boolean).join(", ")
-      : responseBody?.detail;
-    throw new Error(detail || `API request failed with status ${response.status}`);
+  return apiRequest<T>("POST", path, body);
+}
+
+async function apiRequest<T>(method: "GET" | "POST", path: string, body?: unknown, suppliedRequestId?: string): Promise<T> {
+  const requestId = suppliedRequestId ?? randomUUID();
+  const controller = new AbortController();
+  const startedAt = performance.now();
+  const timeout = setTimeout(() => controller.abort(), apiTimeoutMs());
+  let status = 503;
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      method,
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-Request-ID": requestId,
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal: controller.signal,
+    });
+    status = response.status;
+    if (!response.ok) {
+      const responseBody = await response.json().catch(() => null) as { detail?: string | Array<{ msg?: string }> } | null;
+      const detail = Array.isArray(responseBody?.detail)
+        ? responseBody.detail.map((item) => item.msg).filter(Boolean).join(", ")
+        : responseBody?.detail;
+      throw new ApiError(detail || `API request failed with status ${response.status}`, response.status);
+    }
+    return response.json() as Promise<T>;
+  } catch (error) {
+    const normalized = controller.signal.aborted
+      ? new ApiError(`API request timed out after ${apiTimeoutMs()}ms`, 504)
+      : error instanceof ApiError
+        ? error
+        : new ApiError("API service is unavailable", status);
+    logApiFailure({
+      requestId,
+      method,
+      path,
+      status: normalized.status,
+      durationMs: Math.round(performance.now() - startedAt),
+      error: normalized.message,
+    });
+    throw normalized;
+  } finally {
+    clearTimeout(timeout);
   }
-  return response.json() as Promise<T>;
 }
 
 type BasicAnalysisQuery = {
@@ -138,6 +174,10 @@ export async function getDashboardData(): Promise<{
     apiGet<BasicAnalysis>("/analysis/basic?recent=100"),
   ]);
   return { dashboard, draws, analysis };
+}
+
+export async function getBackendHealth(requestId: string): Promise<{ status: string }> {
+  return apiGet<{ status: string }>("/health", requestId);
 }
 
 export async function getDrawPage(page: number, pageSize: number): Promise<{

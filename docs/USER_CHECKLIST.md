@@ -690,7 +690,8 @@ uvicorn lotto_analysis.api.main:app --reload
 * `[사용자 확인]` 모바일 너비에서 주요 메뉴를 좌우로 스크롤해 모든 화면으로 이동
 * `[자동 확인/P2]` Server Action 제출 성공·실패 후 사용자 입력 조건 보존
 * `[자동 확인/P3]` Playwright로 대시보드·회차 상세/404·기본 통계·번호 생성 경로를 데스크톱과 모바일에서 확인
-* `[후속/P3]` 배포 환경 오류 기록·상태 점검·타임아웃 정책
+* `[자동 확인/P3]` FastAPI 요청 ID·JSON 실패 로그·10초 기본 타임아웃과 `/api/health` 상태 점검 적용
+* `[배포 시]` 배포 플랫폼 health check를 `/api/health`로 설정하고 표준 오류 JSON 로그 수집 확인
 
 종료는 Streamlit을 실행한 터미널에서 `Ctrl+C`를 누른다. 화면은 현재 읽기 전용이다.
 
@@ -749,3 +750,4 @@ uvicorn lotto_analysis.api.main:app --reload
 * 2026-07-20: Next.js 전체 코드 리뷰와 회차 오류·모바일 탐색 P1 보완.
 * 2026-07-22: 번호 생성·단일·반복 백테스트 Server Action 입력 상태 보존.
 * 2026-07-22: 고정 mock API 기반 Next.js 데스크톱·모바일 핵심 E2E 테스트 추가.
+* 2026-07-22: Next.js FastAPI 요청 ID·구조화 오류 로그·타임아웃·상태 점검 정책 추가.

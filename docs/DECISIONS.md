@@ -480,3 +480,11 @@
 * 테스트는 고정 응답 mock API를 자체 실행해 PostgreSQL 데이터와 외부 네트워크 상태에 의존하지 않는다.
 * 첫 범위는 대시보드, 회차 상세·404, 기본 통계와 번호 생성·입력 보존으로 제한한다.
 * mock 전용 분기를 제품 코드에 추가하지 않고 `frontend/e2e` 안에서 HTTP 계약만 대체한다.
+
+## 2026-07-22: Next.js 배포 관측성 기본 정책
+
+* Next.js가 FastAPI를 호출할 때 UUID 요청 ID를 만들고 `X-Request-ID`로 전달한다.
+* 실패는 요청 본문·전체 URL·환경변수를 제외한 한 줄 JSON으로 표준 오류 출력에 기록한다.
+* 모든 FastAPI 요청은 기본 10초 타임아웃을 사용하고 `LOTTO_API_TIMEOUT_MS`로 100~120,000ms 안에서 조정한다.
+* `GET /api/health`는 Next.js에서 FastAPI process health까지의 연결을 확인하며 정상은 200, 실패·타임아웃은 503을 반환한다.
+* PostgreSQL readiness, 외부 로그 서비스와 분산 추적은 실제 배포 인프라가 정해지기 전에는 추가하지 않는다.

@@ -1,5 +1,13 @@
 import { expect, test } from "@playwright/test";
 
+test("상태 점검 경로가 FastAPI 연결 상태와 요청 ID를 반환한다", async ({ request }) => {
+  const response = await request.get("/api/health");
+  expect(response.ok()).toBeTruthy();
+  const requestId = response.headers()["x-request-id"];
+  expect(requestId).toBeTruthy();
+  expect(await response.json()).toMatchObject({ status: "ok", backend: "ok", request_id: requestId });
+});
+
 test("대시보드에서 최신 데이터와 주요 메뉴를 확인한다", async ({ page }) => {
   await page.goto("/");
 

@@ -164,6 +164,8 @@ pnpm dev
 
 브라우저에서 `http://localhost:3000`을 엽니다. `LOTTO_API_BASE_URL`은 Next.js 서버가 접근할 FastAPI 주소이며 기본값은 `http://127.0.0.1:8000/api`입니다. 첫 화면은 최신 회차, 수집·누락 현황, 최근 8회 기록과 최근 100회 출현 빈도 상위를 표시합니다.
 
+`LOTTO_API_TIMEOUT_MS`는 Next.js가 FastAPI 응답을 기다리는 시간이며 기본값은 10,000ms입니다. 배포 상태 점검은 `GET /api/health`를 사용합니다. 정상 시 `200`, FastAPI 연결 실패나 타임아웃 시 `503`을 반환하며 응답 헤더와 본문의 `request_id`를 서버 JSON 오류 로그와 대조할 수 있습니다. 자세한 운영 기준은 [Next.js 운영 안내](docs/NEXTJS_OPERATIONS.md)를 참고합니다.
+
 모바일 화면에서도 공통 주요 메뉴는 두 번째 줄에 유지되며, 메뉴가 화면보다 길면 좌우로 스크롤할 수 있습니다. 회차 상세는 없는 회차의 404와 FastAPI·PostgreSQL 장애 안내를 구분합니다.
 
 사용자 화면 경로:

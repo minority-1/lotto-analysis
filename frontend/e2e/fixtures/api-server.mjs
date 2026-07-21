@@ -86,6 +86,9 @@ function generationResponse(body) {
 
 createServer((request, response) => {
   const url = new URL(request.url ?? "/", `http://127.0.0.1:${port}`);
+  if (request.method === "GET" && url.pathname === "/api/health") {
+    return json(response, 200, { status: "ok" });
+  }
   if (request.method === "GET" && url.pathname === "/api/dashboard") {
     return json(response, 200, { total_draws: 1232, first_draw_number: 1, latest_draw: latestDraw, missing_draw_numbers: [] });
   }
