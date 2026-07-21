@@ -1,11 +1,13 @@
 "use server";
 
 import { runBacktestExperiment } from "@/lib/api";
+import { submittedValues, type SubmittedValues } from "@/lib/form-state";
 import type { BacktestExperimentRequest, BacktestExperimentResponse } from "@/lib/types";
 
-export type ExperimentState = { result: BacktestExperimentResponse | null; error: string | null };
+export type ExperimentState = { result: BacktestExperimentResponse | null; error: string | null; values: SubmittedValues; submission: number };
 
-export async function runExperimentAction(_previous: ExperimentState, formData: FormData): Promise<ExperimentState> {
+export async function runExperimentAction(previous: ExperimentState, formData: FormData): Promise<ExperimentState> {
+  const values = submittedValues(formData);
   try {
     const request: BacktestExperimentRequest = {
       target_count: integer(formData, "target_count", 20),
@@ -14,9 +16,9 @@ export async function runExperimentAction(_previous: ExperimentState, formData: 
       frequency_recent: integer(formData, "frequency_recent", 50),
       maximum_attempts: integer(formData, "maximum_attempts", 10000),
     };
-    return { result: await runBacktestExperiment(request), error: null };
+    return { result: await runBacktestExperiment(request), error: null, values, submission: previous.submission + 1 };
   } catch (error) {
-    return { result: null, error: error instanceof Error ? error.message : "반복 비교 요청에 실패했습니다." };
+    return { result: null, error: error instanceof Error ? error.message : "반복 비교 요청에 실패했습니다.", values, submission: previous.submission + 1 };
   }
 }
 

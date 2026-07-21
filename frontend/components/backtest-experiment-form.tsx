@@ -4,21 +4,22 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { runExperimentAction, type ExperimentState } from "@/app/backtests/experiment/actions";
+import { restoredValue } from "@/lib/form-state";
 import type { BacktestExperimentResponse, BacktestExperimentSummary } from "@/lib/types";
 
-const initialState: ExperimentState = { result: null, error: null };
+const initialState: ExperimentState = { result: null, error: null, values: {}, submission: 0 };
 
 export function BacktestExperimentForm() {
   const [state, action] = useActionState(runExperimentAction, initialState);
   return <>
-    <form className="backtest-form" action={action}>
+    <form className="backtest-form" action={action} key={state.submission}>
       <div className="generator-intro"><div><span className="eyebrow">EXPERIMENT GRID</span><h2>비교 조건</h2></div><p>균등 · 전체 빈도 · 최근 빈도 전략을 모두 실행합니다.</p></div>
       <div className="experiment-form-grid">
-        <label><span>목표 회차 수</span><input name="target_count" type="number" min="1" max="100" defaultValue="20" required /></label>
-        <label><span>회차당 조합 수 목록</span><input name="combination_counts" defaultValue="1, 5, 10" required /><small>1~50, 중복 없이 최대 4개</small></label>
-        <label><span>seed 목록</span><input name="seeds" defaultValue="41, 42, 43" required /><small>중복 없이 최대 10개</small></label>
-        <label><span>최근 빈도 학습 범위</span><select name="frequency_recent" defaultValue="50"><option value="20">최근 20회</option><option value="50">최근 50회</option><option value="100">최근 100회</option><option value="200">최근 200회</option></select></label>
-        <label><span>회차당 최대 시도</span><input name="maximum_attempts" type="number" min="1" max="10000" defaultValue="10000" required /></label>
+        <label><span>목표 회차 수</span><input name="target_count" type="number" min="1" max="100" defaultValue={restoredValue(state.values, "target_count", "20")} required /></label>
+        <label><span>회차당 조합 수 목록</span><input name="combination_counts" defaultValue={restoredValue(state.values, "combination_counts", "1, 5, 10")} required /><small>1~50, 중복 없이 최대 4개</small></label>
+        <label><span>seed 목록</span><input name="seeds" defaultValue={restoredValue(state.values, "seeds", "41, 42, 43")} required /><small>중복 없이 최대 10개</small></label>
+        <label><span>최근 빈도 학습 범위</span><select name="frequency_recent" defaultValue={restoredValue(state.values, "frequency_recent", "50")}><option value="20">최근 20회</option><option value="50">최근 50회</option><option value="100">최근 100회</option><option value="200">최근 200회</option></select></label>
+        <label><span>회차당 최대 시도</span><input name="maximum_attempts" type="number" min="1" max="10000" defaultValue={restoredValue(state.values, "maximum_attempts", "10000")} required /></label>
       </div>
       <p className="generator-warning">예상 조합 작업량은 목표 수 × 조합 수 합계 × seed 수 × 3개 전략이며 최대 100,000입니다.</p>
       <ExperimentButton />

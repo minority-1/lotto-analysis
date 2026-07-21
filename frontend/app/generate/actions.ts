@@ -1,11 +1,13 @@
 "use server";
 
 import { generateCombinations } from "@/lib/api";
+import { submittedValues, type SubmittedValues } from "@/lib/form-state";
 import type { GenerationRequest, GenerationResponse } from "@/lib/types";
 
-export type GenerationState = { result: GenerationResponse | null; error: string | null };
+export type GenerationState = { result: GenerationResponse | null; error: string | null; values: SubmittedValues; submission: number };
 
-export async function generateAction(_previous: GenerationState, formData: FormData): Promise<GenerationState> {
+export async function generateAction(previous: GenerationState, formData: FormData): Promise<GenerationState> {
+  const values = submittedValues(formData);
   try {
     const request: GenerationRequest = {
       strategy: formData.get("strategy") === "frequency" ? "frequency" : "uniform",
@@ -30,9 +32,9 @@ export async function generateAction(_previous: GenerationState, formData: FormD
       maximum_attempts: integer(formData, "maximum_attempts", 10000),
       seed: optionalInteger(formData, "seed"),
     };
-    return { result: await generateCombinations(request), error: null };
+    return { result: await generateCombinations(request), error: null, values, submission: previous.submission + 1 };
   } catch (error) {
-    return { result: null, error: error instanceof Error ? error.message : "번호 생성 요청에 실패했습니다." };
+    return { result: null, error: error instanceof Error ? error.message : "번호 생성 요청에 실패했습니다.", values, submission: previous.submission + 1 };
   }
 }
 

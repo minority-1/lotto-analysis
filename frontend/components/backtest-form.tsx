@@ -6,22 +6,23 @@ import { useFormStatus } from "react-dom";
 
 import { runBacktestAction, type BacktestState } from "@/app/backtests/actions";
 import { LottoBall } from "@/components/lotto-ball";
+import { restoredValue } from "@/lib/form-state";
 import type { BacktestResponse } from "@/lib/types";
 
-const initialState: BacktestState = { result: null, error: null };
+const initialState: BacktestState = { result: null, error: null, values: {}, submission: 0 };
 
 export function BacktestForm() {
   const [state, action] = useActionState(runBacktestAction, initialState);
   return <>
-    <form className="backtest-form" action={action}>
+    <form className="backtest-form" action={action} key={state.submission}>
       <div className="generator-intro"><div><span className="eyebrow">RUN SETTINGS</span><h2>실행 조건</h2></div><p>기본 작업량: 20회 × 5조합 = 100조합</p></div>
       <div className="backtest-form-grid">
-        <label><span>전략</span><select name="strategy" defaultValue="uniform"><option value="uniform">균등 무작위</option><option value="frequency">과거 빈도 가중</option></select></label>
-        <label><span>빈도 기준</span><select name="weight_recent" defaultValue="0"><option value="0">각 목표 이전 전체</option><option value="20">각 목표 이전 최근 20회</option><option value="50">각 목표 이전 최근 50회</option><option value="100">각 목표 이전 최근 100회</option></select><small>빈도 가중 전략에서만 적용</small></label>
-        <label><span>목표 회차 수</span><input name="target_count" type="number" min="1" max="100" defaultValue="20" required /></label>
-        <label><span>회차당 조합 수</span><input name="combinations_per_target" type="number" min="1" max="50" defaultValue="5" required /></label>
-        <label><span>기본 seed</span><input name="base_seed" type="number" defaultValue="42" required /></label>
-        <label><span>회차당 최대 시도</span><input name="maximum_attempts" type="number" min="1" max="10000" defaultValue="10000" required /></label>
+        <label><span>전략</span><select name="strategy" defaultValue={restoredValue(state.values, "strategy", "uniform")}><option value="uniform">균등 무작위</option><option value="frequency">과거 빈도 가중</option></select></label>
+        <label><span>빈도 기준</span><select name="weight_recent" defaultValue={restoredValue(state.values, "weight_recent", "0")}><option value="0">각 목표 이전 전체</option><option value="20">각 목표 이전 최근 20회</option><option value="50">각 목표 이전 최근 50회</option><option value="100">각 목표 이전 최근 100회</option></select><small>빈도 가중 전략에서만 적용</small></label>
+        <label><span>목표 회차 수</span><input name="target_count" type="number" min="1" max="100" defaultValue={restoredValue(state.values, "target_count", "20")} required /></label>
+        <label><span>회차당 조합 수</span><input name="combinations_per_target" type="number" min="1" max="50" defaultValue={restoredValue(state.values, "combinations_per_target", "5")} required /></label>
+        <label><span>기본 seed</span><input name="base_seed" type="number" defaultValue={restoredValue(state.values, "base_seed", "42")} required /></label>
+        <label><span>회차당 최대 시도</span><input name="maximum_attempts" type="number" min="1" max="10000" defaultValue={restoredValue(state.values, "maximum_attempts", "10000")} required /></label>
       </div>
       <p className="generator-warning">목표 회차 수 × 회차당 조합 수는 최대 5,000이며 실행 중에는 결과가 나올 때까지 기다려 주세요.</p>
       <BacktestButton />

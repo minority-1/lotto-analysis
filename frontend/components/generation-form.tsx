@@ -5,34 +5,35 @@ import { useFormStatus } from "react-dom";
 
 import { generateAction, type GenerationState } from "@/app/generate/actions";
 import { LottoBall } from "@/components/lotto-ball";
+import { restoredValue, type SubmittedValues } from "@/lib/form-state";
 import type { GenerationResponse } from "@/lib/types";
 
-const initialState: GenerationState = { result: null, error: null };
+const initialState: GenerationState = { result: null, error: null, values: {}, submission: 0 };
 
 export function GenerationForm() {
   const [state, action] = useActionState(generateAction, initialState);
   return <>
-    <form className="generator-form" action={action}>
+    <form className="generator-form" action={action} key={state.submission}>
       <div className="generator-intro"><div><span className="eyebrow">BASIC SETTINGS</span><h2>생성 조건</h2></div><p>포함·제외 번호는 쉼표나 공백으로 구분하세요.</p></div>
       <div className="generator-grid">
-        <Field label="생성 전략"><select name="strategy" defaultValue="uniform"><option value="uniform">균등 무작위</option><option value="frequency">과거 빈도 가중</option></select></Field>
-        <Field label="빈도 기준"><select name="weight_recent" defaultValue="0"><option value="0">전체 회차</option><option value="50">최근 50회</option><option value="100">최근 100회</option><option value="200">최근 200회</option><option value="500">최근 500회</option></select><small>빈도 가중 전략에서만 적용</small></Field>
-        <Field label="생성 개수"><input name="count" type="number" min="1" max="50" defaultValue="5" required /></Field>
-        <Field label="재현 seed"><input name="seed" type="number" placeholder="비우면 매번 변경" /></Field>
-        <Field label="반드시 포함"><input name="required_numbers" placeholder="예: 7, 20" /></Field>
-        <Field label="제외"><input name="excluded_numbers" placeholder="예: 1, 2, 3" /></Field>
+        <Field label="생성 전략"><select name="strategy" defaultValue={restoredValue(state.values, "strategy", "uniform")}><option value="uniform">균등 무작위</option><option value="frequency">과거 빈도 가중</option></select></Field>
+        <Field label="빈도 기준"><select name="weight_recent" defaultValue={restoredValue(state.values, "weight_recent", "0")}><option value="0">전체 회차</option><option value="50">최근 50회</option><option value="100">최근 100회</option><option value="200">최근 200회</option><option value="500">최근 500회</option></select><small>빈도 가중 전략에서만 적용</small></Field>
+        <Field label="생성 개수"><input name="count" type="number" min="1" max="50" defaultValue={restoredValue(state.values, "count", "5")} required /></Field>
+        <Field label="재현 seed"><input name="seed" type="number" defaultValue={restoredValue(state.values, "seed", "")} placeholder="비우면 매번 변경" /></Field>
+        <Field label="반드시 포함"><input name="required_numbers" defaultValue={restoredValue(state.values, "required_numbers", "")} placeholder="예: 7, 20" /></Field>
+        <Field label="제외"><input name="excluded_numbers" defaultValue={restoredValue(state.values, "excluded_numbers", "")} placeholder="예: 1, 2, 3" /></Field>
       </div>
       <details className="advanced-conditions"><summary>고급 조건 설정</summary><div className="condition-grid">
-        <RangeFields title="홀수 개수" prefix="odd" minimum={0} maximum={6} />
-        <RangeFields title="낮은 번호 개수 (1~22)" prefix="low" minimum={0} maximum={6} />
-        <RangeFields title="번호 합계" prefix="sum" minimum={21} maximum={255} />
-        <RangeFields title="소수 개수" prefix="prime" minimum={0} maximum={6} />
-        <RangeFields title="AC 값" prefix="ac" minimum={0} maximum={10} />
-        <Field label="최대 연속 번호쌍"><input name="maximum_consecutive_pairs" type="number" min="0" max="5" defaultValue="5" /></Field>
-        <Field label="과거 조합 최대 중복"><input name="maximum_historical_overlap" type="number" min="0" max="6" defaultValue="4" /></Field>
-        <Field label="생성 결과끼리 최대 중복"><input name="maximum_result_overlap" type="number" min="0" max="6" defaultValue="4" /></Field>
-        <Field label="최대 시도 횟수"><input name="maximum_attempts" type="number" min="1" max="100000" defaultValue="10000" /></Field>
-        <label className="checkbox-field"><input name="exclude_exact_historical" type="checkbox" defaultChecked /><span>과거 당첨 조합과 완전히 같은 결과 제외</span></label>
+        <RangeFields title="홀수 개수" prefix="odd" minimum={0} maximum={6} values={state.values} />
+        <RangeFields title="낮은 번호 개수 (1~22)" prefix="low" minimum={0} maximum={6} values={state.values} />
+        <RangeFields title="번호 합계" prefix="sum" minimum={21} maximum={255} values={state.values} />
+        <RangeFields title="소수 개수" prefix="prime" minimum={0} maximum={6} values={state.values} />
+        <RangeFields title="AC 값" prefix="ac" minimum={0} maximum={10} values={state.values} />
+        <Field label="최대 연속 번호쌍"><input name="maximum_consecutive_pairs" type="number" min="0" max="5" defaultValue={restoredValue(state.values, "maximum_consecutive_pairs", "5")} /></Field>
+        <Field label="과거 조합 최대 중복"><input name="maximum_historical_overlap" type="number" min="0" max="6" defaultValue={restoredValue(state.values, "maximum_historical_overlap", "4")} /></Field>
+        <Field label="생성 결과끼리 최대 중복"><input name="maximum_result_overlap" type="number" min="0" max="6" defaultValue={restoredValue(state.values, "maximum_result_overlap", "4")} /></Field>
+        <Field label="최대 시도 횟수"><input name="maximum_attempts" type="number" min="1" max="100000" defaultValue={restoredValue(state.values, "maximum_attempts", "10000")} /></Field>
+        <label className="checkbox-field"><input name="exclude_exact_historical" type="checkbox" defaultChecked={state.submission === 0 || state.values.exclude_exact_historical === "on"} /><span>과거 당첨 조합과 완전히 같은 결과 제외</span></label>
       </div></details>
       <p className="generator-warning">조건이 서로 충돌하거나 지나치게 좁으면 요청 개수보다 적게 생성될 수 있습니다.</p>
       <SubmitButton />
@@ -44,8 +45,8 @@ export function GenerationForm() {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label className="generator-field"><span>{label}</span>{children}</label>; }
 
-function RangeFields({ title, prefix, minimum, maximum }: { title: string; prefix: string; minimum: number; maximum: number }) {
-  return <fieldset><legend>{title}</legend><label><span>최소</span><input name={`${prefix}_minimum`} type="number" min={minimum} max={maximum} defaultValue={minimum} /></label><label><span>최대</span><input name={`${prefix}_maximum`} type="number" min={minimum} max={maximum} defaultValue={maximum} /></label></fieldset>;
+function RangeFields({ title, prefix, minimum, maximum, values }: { title: string; prefix: string; minimum: number; maximum: number; values: SubmittedValues }) {
+  return <fieldset><legend>{title}</legend><label><span>최소</span><input name={`${prefix}_minimum`} type="number" min={minimum} max={maximum} defaultValue={restoredValue(values, `${prefix}_minimum`, String(minimum))} /></label><label><span>최대</span><input name={`${prefix}_maximum`} type="number" min={minimum} max={maximum} defaultValue={restoredValue(values, `${prefix}_maximum`, String(maximum))} /></label></fieldset>;
 }
 
 function SubmitButton() { const { pending } = useFormStatus(); return <button className="generate-button" type="submit" disabled={pending}>{pending ? "조건을 확인하고 생성 중…" : "후보 조합 생성"}</button>; }
